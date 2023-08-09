@@ -12,3 +12,4 @@ praat-parselmouth>=0.4.2
 pyworld==0.3.2
 faiss-cpu==1.7.3
 numpy==1.23.5
+nltk
