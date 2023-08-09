@@ -72,6 +72,7 @@ async def call_edge_tts(speaker_name: str, text: str):
         '-f', 'mp3',
         '-i', '-',
         '-f', 'wav',
+        '-loglevel', 'error',
         '-',
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE
@@ -96,6 +97,7 @@ async def call_edge_tts_config(speaker_name: str, text: str, rate: str, volume: 
         '-f', 'mp3',
         '-i', '-',
         '-f', 'wav',
+        '-loglevel', 'error',
         '-',
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE

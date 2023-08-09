@@ -90,18 +90,21 @@ class RVCSpeakers:
 
     def vc_func(
             self,
-            input_audio, model_index, pitch_adjust, f0_method, feat_ratio,
-            filter_radius, rms_mix_rate, resample_option
+            input_audio, model_index, f0_up_key, f0_method, index_rate,
+            filter_radius, rms_mix_rate, resample_sr, protect: float = 0.33, f0_file: str = None
     ):
         """
             # https://github.com/fumiama/Retrieval-based-Voice-Conversion-WebUI/blob/main/infer-web.py#L118  # noqa
+        :param f0_up_key:  变调(整数, 半音数量, 升八度12降八度-12)
+        :param input_audio:
+        :param f0_file:  F0曲线文件, 可选, 一行一个音高, 代替默认F0及升降调
+        :param protect: 保护清辅音和呼吸声，防止电音撕裂等artifact，拉满0.5不开启，调低加大保护力度但可能降低索引效果
         :param model_index:
-        :param pitch_adjust:
         :param f0_method:
-        :param feat_ratio:
-        :param filter_radius:
-        :param rms_mix_rate:
-        :param resample_option:
+        :param index_rate: 检索特征占比
+        :param filter_radius: >=3则使用对harvest音高识别的结果使用中值滤波，数值为滤波半径，使用可以削弱哑音
+        :param rms_mix_rate: 输入源音量包络替换输出音量包络融合比例，越靠近1越使用输出包络
+        :param resample_sr: 后处理重采样至最终采样率，0为不进行重采样
         :return:
         """
         if input_audio is None:
@@ -136,17 +139,21 @@ class RVCSpeakers:
                 target_sr=16000
             )
 
-        pitch_int = int(pitch_adjust)
-
-        resample = (
-            0 if resample_option == 'Disable resampling'
-            else int(resample_option)
-        )
-
+        f0_up_key = int(f0_up_key)
+        print(f0_up_key)
         times = [0, 0, 0]
 
         checksum = hashlib.sha512()
         checksum.update(audio_npy.tobytes())
+        feat_file_index = ''
+        if (
+                model['metadata']['feat_index'] != ""
+                # and file_big_npy != ""
+                # and os.path.exists(file_big_npy) == True
+                and os.path.exists( model['metadata']['feat_index']) == True
+                and index_rate != 0
+        ):
+            feat_file_index = path.join('model', model['name'], model['metadata']['feat_index'])
 
         output_audio = model['vc'].pipeline(
             self.hubert_model,
@@ -155,20 +162,22 @@ class RVCSpeakers:
             audio_npy,
             checksum.hexdigest(),
             times,
-            pitch_int,
+            f0_up_key,
             f0_method,
-            path.join('model', model['name'], model['metadata']['feat_index']),
-            feat_ratio,
+            feat_file_index,
+            index_rate,
             model['if_f0'],
             filter_radius,
             model['target_sr'],
-            resample,
+            resample_sr,
             rms_mix_rate,
-            'v2'
+            'v2',
+            protect,
+            f0_file=f0_file
         )
 
         out_sr = (
-            resample if resample >= 16000 and model['target_sr'] != resample
+            resample_sr if 16000 <= resample_sr != model['target_sr']
             else model['target_sr']
         )
 

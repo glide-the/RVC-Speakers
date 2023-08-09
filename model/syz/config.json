@@ -1,0 +1,11 @@
+{
+    "model": "syz.pth",
+    "feat_index": "added_IVF1249_Flat_nprobe_1_syz_v2.index",
+    "speaker_id": 0,
+
+    "name": "Stefanie Sun",
+    "author": "滔滔AI",
+    "source": "ALL",
+    "note": "I am AI singer Stefanie Sun",
+    "icon": "cover.png"
+}

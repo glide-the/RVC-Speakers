@@ -5,4 +5,7 @@ __pycache__/
 .DS_Store
 flagged
 wav/*
-model/*
+model/*/*.pth
+model/*/*.index
+.ipynb_checkpoints
+.idea
