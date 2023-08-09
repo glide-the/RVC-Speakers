@@ -9,5 +9,5 @@ model/*/*.pth
 model/*/*.index
 .ipynb_checkpoints
 .idea
-bark_generation_rvc.wav
-bark_generation.wav
+./bark_generation_rvc.wav
+./bark_generation.wav
