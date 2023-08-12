@@ -5,9 +5,15 @@ __pycache__/
 .DS_Store
 flagged
 wav/*
-model/*/*.pth
-model/*/*.index
+notebook/npz
+vits/model/*.pth
+rvc/model/*/*.pth
+rvc/model/*/*.index
 .ipynb_checkpoints
 .idea
 ./bark_generation_rvc.wav
 ./bark_generation.wav
+vits/monotonic_align/build
+vits/monotonic_align/vits
+vits/monotonic_align/core*.c
+vits/monotonic_align/core*.so

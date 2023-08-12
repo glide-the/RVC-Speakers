@@ -1,10 +1,21 @@
+Cython==0.29.21
+# vits_text
+unidecode
+# pre uninstall cmake
+pyopenjtalk
+jamo
+pypinyin
+jieba
+cn2an
+# vits_text
+
 gradio==3.33.1
+fairseq
 torch
 torchaudio
 soundfile
 scipy==1.9.3
 librosa==0.9.1
-edge-tts
 musicdl
 pyaudio
 torchcrepe==0.0.20
@@ -13,3 +24,8 @@ pyworld==0.3.2
 faiss-cpu==1.7.3
 numpy==1.23.5
 nltk
+
+edge-tts
+IPython
+tqdm
+pandas
