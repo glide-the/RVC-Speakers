@@ -9,11 +9,13 @@ from speakers.common.registry import registry
 from speakers.processors.base_processor import BaseProcessor
 from speakers.processors.base_processor import ProcessorData
 from speakers.processors.rvc_speakers_processor import RvcProcessorData
+from speakers.processors.vits_to_voice import VitsProcessorData
 
 __all__ = [
     "BaseProcessor",
     "ProcessorData",
     "RvcProcessorData",
+    "VitsProcessorData",
 ]
 
 
@@ -43,11 +45,10 @@ def load_preprocess(config: dict = None):
             else BaseProcessor()
         )
 
-    # vits_proc_cfg = config.get("vits_processor")
+    vits_proc_cfg = config.get("vits_processor")
     rvc_proc_cfg = config.get("rvc_processor")
 
-    # vits_processors = _build_proc_from_cfg(vits_proc_cfg)
-    vits_processors = None
+    vits_processors = _build_proc_from_cfg(vits_proc_cfg)
 
     rvc_processors = _build_proc_from_cfg(rvc_proc_cfg)
 

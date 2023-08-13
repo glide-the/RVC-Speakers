@@ -1,5 +1,6 @@
-from vits.vits_to_voice import VitsToVoice
+from speakers.common.registry import registry
+import os
 
-__all__ = [
-    "VitsToVoice"
-]
+root_dir = os.path.dirname(os.path.abspath(__file__))
+registry.register_path("vits_library_root", root_dir)
+

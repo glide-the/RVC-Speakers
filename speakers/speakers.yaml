@@ -5,8 +5,9 @@
 
 preprocess:
     vits_processor:
-      name: "blip_image_eval"
-      image_size: 224
+      name: "vits_to_voice"
+      vits_model_path: "model/G_953000.pth"
+      voice_config_file: "model/config.json"
     rvc_processor:
       name: "rvc_speakers"
       hubert_model_path: "rvc/model/hubert_base.pt"
