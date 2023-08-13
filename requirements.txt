@@ -29,3 +29,8 @@ edge-tts
 IPython
 tqdm
 pandas
+
+# config manage
+omegaconf
+pydantic
+

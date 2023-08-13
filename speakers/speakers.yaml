@@ -1,0 +1,13 @@
+ # Copyright (c) 2022, salesforce.com, inc.
+ # All rights reserved.
+ # SPDX-License-Identifier: BSD-3-Clause
+ # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+
+preprocess:
+    vits_processor:
+      name: "blip_image_eval"
+      image_size: 224
+    rvc_processor:
+      name: "rvc_speakers"
+      hubert_model_path: "rvc/model/hubert_base.pt"
+      rvc_config_file: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/rvc/rvc.yaml"

@@ -5,8 +5,7 @@ from vits.text import text_to_sequence
 from torch import no_grad, LongTensor
 import torch
 import os
-import config
-
+from speakers.common.registry import registry
 
 def get_text(text, hps):
     text_norm, clean_text = text_to_sequence(text, hps.symbols, hps.data.text_cleaners)
@@ -35,7 +34,7 @@ class VitsToVoice:
 
     def _load_voice_mode(self, vits_model: str, voice_config_file: str):
 
-        device = torch.device(config.device)
+        device = torch.device(registry.get("device"))
         self.hps_ms = utils.get_hparams_from_file(voice_config_file)
         self.net_g_ms = SynthesizerTrn(
             len(self.hps_ms.symbols),
@@ -81,9 +80,9 @@ class VitsToVoice:
 
         stn_tst, clean_text = get_text(text, self.hps_ms)
         with no_grad():
-            x_tst = stn_tst.unsqueeze(0).to(config.device)
-            x_tst_lengths = LongTensor([stn_tst.size(0)]).to(config.device)
-            sid = LongTensor([speaker_id]).to(config.device)
+            x_tst = stn_tst.unsqueeze(0).to(registry.get("device"))
+            x_tst_lengths = LongTensor([stn_tst.size(0)]).to(registry.get("device"))
+            sid = LongTensor([speaker_id]).to(registry.get("device"))
             audio = self.model.infer(x_tst, x_tst_lengths, sid=sid,
                                      noise_scale=noise_scale,
                                      noise_scale_w=noise_scale_w,
