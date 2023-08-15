@@ -12,10 +12,39 @@ class Registry:
     """
     mapping = {
         "processor_name_mapping": {},
+        "task_name_mapping": {},
         "state": {},
         "paths": {},
     }
 
+    @classmethod
+    def register_task(cls, name):
+        r"""Register a task to registry with key 'name'
+
+        Args:
+            name: Key with which the task will be registered.
+
+        Usage:
+
+            from lavis.common.registry import registry
+        """
+
+        def wrap(task_cls):
+            from lavis.tasks.base_task import BaseTask
+
+            assert issubclass(
+                task_cls, BaseTask
+            ), "All tasks must inherit BaseTask class"
+            if name in cls.mapping["task_name_mapping"]:
+                raise KeyError(
+                    "Name '{}' already registered for {}.".format(
+                        name, cls.mapping["task_name_mapping"][name]
+                    )
+                )
+            cls.mapping["task_name_mapping"][name] = task_cls
+            return task_cls
+
+        return wrap
     @classmethod
     def register_processor(cls, name):
         r"""Register a processor to registry with key 'name'

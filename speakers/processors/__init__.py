@@ -16,7 +16,11 @@ __all__ = [
     "ProcessorData",
     "RvcProcessorData",
     "VitsProcessorData",
+    "get_processors",
+    "load_preprocess",
 ]
+
+processors_cache = {}
 
 
 def load_preprocess(config: dict = None):
@@ -45,11 +49,15 @@ def load_preprocess(config: dict = None):
             else BaseProcessor()
         )
 
-    vits_proc_cfg = config.get("vits_processor")
-    rvc_proc_cfg = config.get("rvc_processor")
+    for key, processor_cfg in config.items():  # 使用 .items() 方法获取键值对
+        processors = _build_proc_from_cfg(vits_proc_cfg)
+        processors_cache[key] = processors
 
-    vits_processors = _build_proc_from_cfg(vits_proc_cfg)
 
-    rvc_processors = _build_proc_from_cfg(rvc_proc_cfg)
+def get_processors(key: str) -> BaseProcessor:
 
-    return vits_processors, rvc_processors
+    if not processors_cache.get(key):
+        raise ValueError(f'Could not find processors for: "{key}". '
+                         f'Choose from the following: %s' % ','.join(processors_cache))
+
+    return processors_cache[key]

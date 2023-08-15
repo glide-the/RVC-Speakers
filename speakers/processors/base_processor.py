@@ -39,6 +39,15 @@ class BaseProcessor:
         return self.transform(data)
 
     @classmethod
+    def match(cls, data: ProcessorData):
+        """
+        匹配处理器
+        :param data:
+        :return:
+        """
+        raise NotImplementedError
+
+    @classmethod
     def from_config(cls, cfg=None):
         return cls()
 

@@ -101,6 +101,11 @@ class RVCSpeakers(BaseProcessor):
                             f0_file=data.f0_file)
 
     @classmethod
+    def match(cls, data: ProcessorData):
+        return "RVC" in data.type
+
+
+    @classmethod
     def from_config(cls, cfg=None):
         if cfg is None:
             raise RuntimeError("from_config cfg is None.")

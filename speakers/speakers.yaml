@@ -4,11 +4,23 @@
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 preprocess:
-    vits_processor:
-      name: "vits_to_voice"
-      vits_model_path: "model/G_953000.pth"
-      voice_config_file: "model/config.json"
-    rvc_processor:
-      name: "rvc_speakers"
-      hubert_model_path: "rvc/model/hubert_base.pt"
-      rvc_config_file: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/rvc/rvc.yaml"
+    - vits_processor:
+        name: "vits_to_voice"
+        vits_model_path: "model/G_953000.pth"
+        voice_config_file: "model/config.json"
+    - rvc_processor:
+        name: "rvc_speakers"
+        hubert_model_path: "rvc/model/hubert_base.pt"
+        rvc_config_file: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/rvc/rvc.yaml"
+
+
+task:
+  - voice_task:
+      name: "voice_task"
+      preprocess:
+        - vits:
+            processor: "vits_processor"
+            processor_name: "vits"
+        - rvc:
+            processor: "rvc_processor"
+            processor_name: "rvc"

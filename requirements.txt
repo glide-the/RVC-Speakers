@@ -34,3 +34,5 @@ pandas
 omegaconf
 pydantic
 
+# log
+colorama

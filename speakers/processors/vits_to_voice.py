@@ -80,6 +80,10 @@ class VitsToVoice(BaseProcessor):
                               speed=data.speed)
 
     @classmethod
+    def match(cls, data: ProcessorData):
+        return "VITS" in data.type
+
+    @classmethod
     def from_config(cls, cfg=None):
         if cfg is None:
             raise RuntimeError("from_config cfg is None.")
