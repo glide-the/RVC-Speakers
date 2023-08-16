@@ -29,9 +29,9 @@ class Registry:
             from lavis.common.registry import registry
         """
 
+        print(f"from speakers.common.registry import registry {name}")
         def wrap(task_cls):
-            from lavis.tasks.base_task import BaseTask
-
+            from speakers.tasks.base_task import BaseTask
             assert issubclass(
                 task_cls, BaseTask
             ), "All tasks must inherit BaseTask class"
@@ -45,6 +45,7 @@ class Registry:
             return task_cls
 
         return wrap
+
     @classmethod
     def register_processor(cls, name):
         r"""Register a processor to registry with key 'name'
@@ -54,9 +55,9 @@ class Registry:
 
         Usage:
 
-            from lavis.common.registry import registry
+            from speakers.common.registry import registry
         """
-
+        print(f"from speakers.common.registry import registry {name}")
         def wrap(processor_cls):
             from speakers.processors import BaseProcessor
 
@@ -120,8 +121,16 @@ class Registry:
         return cls.mapping["processor_name_mapping"].get(name, None)
 
     @classmethod
+    def get_task_class(cls, name):
+        return cls.mapping["task_name_mapping"].get(name, None)
+
+    @classmethod
     def list_processors(cls):
         return sorted(cls.mapping["processor_name_mapping"].keys())
+
+    @classmethod
+    def list_tasks(cls):
+        return sorted(cls.mapping["task_name_mapping"].keys())
 
     @classmethod
     def get_path(cls, name):
@@ -148,9 +157,9 @@ class Registry:
                 break
 
         if (
-            "writer" in cls.mapping["state"]
-            and value == default
-            and no_warning is False
+                "writer" in cls.mapping["state"]
+                and value == default
+                and no_warning is False
         ):
             cls.mapping["state"]["writer"].warning(
                 "Key {} is not present in registry, returning default value "

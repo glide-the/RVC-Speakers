@@ -1,20 +1,41 @@
-from typing import List
+from abc import abstractmethod
+from typing import List, Dict
 
+from speakers.load.serializable import Serializable
 from speakers.processors import ProcessorData, BaseProcessor
 from collections import deque
 
 
-class FlowData:
+class FlowData(Serializable):
     """
     当前runner的任务参数
     """
 
+    @property
+    @abstractmethod
+    def type(self) -> str:
+        """Type of the Message, used for serialization."""
+    @property
+    def lc_serializable(self) -> bool:
+        """Whether this class is Processor serializable."""
+        return True
 
-class Runner:
+
+class Runner(Serializable):
     """ runner的任务id"""
     task_id: str
     flow_data: FlowData
     processor_q: deque[str]
+
+    @property
+    def type(self) -> str:
+        """Type of the Runner Message, used for serialization."""
+        return 'runner'
+
+    @property
+    def lc_serializable(self) -> bool:
+        """Whether this class is Processor serializable."""
+        return True
 
 
 # Define a base class for tasks
@@ -24,8 +45,8 @@ class BaseTask:
         此类定义了流程runner task的生命周期
     """
 
-    def __init__(self, preprocess_dict: [str, BaseProcessor]):
-        self.preprocess_dict = preprocess_dict
+    def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
+        self._preprocess_dict = preprocess_dict
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -58,7 +79,7 @@ class BaseTask:
         raise NotImplementedError
 
     @classmethod
-    def support(cls, runner: Runner):
+    def support(cls, runner: Runner) -> bool:
         """
         用于检测当前runner task中用到的 processor是否支持
 

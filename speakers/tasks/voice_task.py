@@ -1,15 +1,25 @@
+from typing import Dict
 
-from speakers.processors import ProcessorData, BaseProcessor, get_processors
-from speakers.tasks import BaseTask, Runner
+from speakers.processors import ProcessorData, BaseProcessor, get_processors, VitsProcessorData
+from speakers.tasks import BaseTask, Runner, FlowData
 from speakers.common.registry import registry
+
+
+class VoiceFlowData(FlowData):
+    vits: VitsProcessorData
+
+    @property
+    def type(self) -> str:
+        """Type of the FlowData Message, used for serialization."""
+        return "voice"
 
 
 @registry.register_task("voice_task")
 class VoiceTask(BaseTask):
 
-    def __init__(self, preprocess_dict: [str, BaseProcessor]):
-        super().__init__(preprocess_dict)
-        self.preprocess_dict = preprocess_dict
+    def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
+        super().__init__(preprocess_dict=preprocess_dict)
+        self._preprocess_dict = preprocess_dict
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -22,33 +32,29 @@ class VoiceTask(BaseTask):
         return cls(preprocess_dict=preprocess_dict)
 
     @property
-    def preprocess_dict(self) -> [str, BaseProcessor]:
-        return self.preprocess_dict
+    def preprocess_dict(self) -> Dict[str, BaseProcessor]:
+        return self._preprocess_dict
 
-    @classmethod
-    def prepare(cls, runner: Runner):
+    def prepare(self, runner: Runner):
         pass
 
-    @classmethod
-    def dispatch(cls, runner: Runner):
+    def dispatch(self, runner: Runner):
         data = runner.flow_data
-        preprocess_object = cls.preprocess_dict[data.type]
-        if not preprocess_object.match(data):
-            raise RuntimeError('不支持的process')
-        audio_np = preprocess_object(data)
+        if 'voice' in data.type:
+            preprocess_object = self.preprocess_dict.get(data.vits.type)
+            print(preprocess_object)
+            if not preprocess_object.match(data.vits):
+                raise RuntimeError('不支持的process')
+            audio_np = preprocess_object(data.vits)
 
-        return audio_np
+            return audio_np
 
-    @classmethod
-    def support(cls, runner: Runner):
+    def support(self, runner: Runner) -> bool:
         for type_name in runner.processor_q:
-            if cls.preprocess_dict[type_name] is None:
+            if self.preprocess_dict.get(type_name) is None:
                 raise NotImplementedError
 
-    @classmethod
-    def complete(cls, runner: Runner):
-        pass
+        return True
 
-    @preprocess_dict.setter
-    def preprocess_dict(self, value):
-        self._preprocess_dict = value
+    def complete(self, runner: Runner):
+        pass

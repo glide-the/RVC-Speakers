@@ -14,13 +14,13 @@ preprocess:
         rvc_config_file: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/rvc/rvc.yaml"
 
 
-task:
+tasks:
   - voice_task:
       name: "voice_task"
       preprocess:
         - vits:
             processor: "vits_processor"
-            processor_name: "vits"
+            processor_name: "VITS"
         - rvc:
             processor: "rvc_processor"
-            processor_name: "rvc"
+            processor_name: "RVC"

@@ -79,9 +79,6 @@ class VitsToVoice(BaseProcessor):
                               noise_scale_w=data.noise_scale_w,
                               speed=data.speed)
 
-    @classmethod
-    def match(cls, data: ProcessorData):
-        return "VITS" in data.type
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -95,6 +92,9 @@ class VitsToVoice(BaseProcessor):
                                                 vits_model_path),
                    voice_config_file=os.path.join(registry.get_path("vits_library_root"),
                                                   voice_config_file))
+
+    def match(self, data: ProcessorData):
+        return "VITS" in data.type
 
     @property
     def speakers(self):

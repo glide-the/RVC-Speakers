@@ -4,6 +4,7 @@
  SPDX-License-Identifier: BSD-3-Clause
  For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
+from typing import List
 
 from speakers.common.registry import registry
 from speakers.processors.base_processor import BaseProcessor
@@ -23,14 +24,14 @@ __all__ = [
 processors_cache = {}
 
 
-def load_preprocess(config: dict = None):
+def load_preprocess(config: List[dict] = None):
     """
     Load preprocessor configs and construct preprocessors.
 
     If no preprocessor is specified, return BaseProcessor, which does not do any preprocessing.
 
     Args:
-        config (dict): preprocessor configs.
+        config (List[dict]): preprocessor configs.
 
     Returns:
         vits_processors (dict): preprocessors for vits inputs.
@@ -48,10 +49,10 @@ def load_preprocess(config: dict = None):
             if cfg is not None
             else BaseProcessor()
         )
-
-    for key, processor_cfg in config.items():  # 使用 .items() 方法获取键值对
-        processors = _build_proc_from_cfg(vits_proc_cfg)
-        processors_cache[key] = processors
+    for process_cfg in config:  # 使用 .items() 方法获取键值对
+        for key, processor_cfg in process_cfg.items():  # 使用 .items() 方法获取键值对
+            processors = _build_proc_from_cfg(processor_cfg)
+            processors_cache[key] = processors
 
 
 def get_processors(key: str) -> BaseProcessor:

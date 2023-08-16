@@ -15,7 +15,7 @@ device = (
         else 'cpu'
     )
 )
-print(device)
+
 registry.register("device", device)
 
 is_half = util.is_half(device)
