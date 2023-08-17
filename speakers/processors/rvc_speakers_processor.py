@@ -34,8 +34,12 @@ class RvcProcessorData(ProcessorData):
     :param resample_sr: 后处理重采样至最终采样率，0为不进行重采样
     :return:
     """
-    sample_rate: int
-    audio_samples: List[float]  # 使用 Python 列表
+    sample_rate: int = Field(
+        default=0
+    )
+    audio_samples: List[float] = Field(
+        default=[]
+    )
 
     model_index: int
 
