@@ -18,3 +18,5 @@ vits/monotonic_align/vits
 vits/monotonic_align/core*.c
 vits/monotonic_align/core.cpython-310-x86_64-linux-gnu.so
 test.wav
+speakers/result
+speakers.egg-info

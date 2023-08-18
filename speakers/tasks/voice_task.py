@@ -17,8 +17,8 @@ class VoiceFlowData(FlowData):
 
 @registry.register_task("voice_task")
 class VoiceTask(BaseTask):
-
     SAMPLE_RATE: int = 22050
+
     def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
         super().__init__(preprocess_dict=preprocess_dict)
         self._preprocess_dict = preprocess_dict
@@ -40,37 +40,46 @@ class VoiceTask(BaseTask):
     def prepare(self, runner: Runner):
         pass
 
-    def dispatch(self, runner: Runner):
-        data = runner.flow_data
-        if 'voice' in data.type:
-            if 'VITS' in data.vits.type:
-                vits_preprocess_object = self.preprocess_dict.get(data.vits.type)
-                if not vits_preprocess_object.match(data.vits):
-                    raise RuntimeError('不支持的process')
-                audio_np = vits_preprocess_object(data.vits)
-                if audio_np is not None and 'RVC' in data.rvc.type:
-                    # 将 NumPy 数组转换为 Python 列表
-                    audio_samples_list = audio_np.tolist()
-                    data.rvc.sample_rate = self.SAMPLE_RATE
-                    data.rvc.audio_samples = audio_samples_list
-                    rvc_preprocess_object = self.preprocess_dict.get(data.rvc.type)
-                    if not rvc_preprocess_object.match(data.rvc):
+    async def dispatch(self, runner: Runner):
+
+        try:
+            # 加载task
+            self.logger.info('dispatch')
+
+            # 开启任务1
+            await self.report_progress('voice_task')
+            data = runner.flow_data
+            if 'voice' in data.type:
+                if 'VITS' in data.vits.type:
+                    vits_preprocess_object = self.preprocess_dict.get(data.vits.type)
+                    if not vits_preprocess_object.match(data.vits):
                         raise RuntimeError('不支持的process')
+                    audio_np = vits_preprocess_object(data.vits)
+                    if audio_np is not None and 'RVC' in data.rvc.type:
+                        # 将 NumPy 数组转换为 Python 列表
+                        audio_samples_list = audio_np.tolist()
+                        data.rvc.sample_rate = self.SAMPLE_RATE
+                        data.rvc.audio_samples = audio_samples_list
+                        rvc_preprocess_object = self.preprocess_dict.get(data.rvc.type)
+                        if not rvc_preprocess_object.match(data.rvc):
+                            raise RuntimeError('不支持的process')
 
-                    out_sr, output_audio = rvc_preprocess_object(data.rvc)
+                        out_sr, output_audio = rvc_preprocess_object(data.rvc)
 
-                    del audio_np
-                    del runner
-                    return out_sr, output_audio
+                        del audio_np
+                        del runner
 
-        return None
+                        # 完成任务，构建响应数据
+                        await self.report_progress('finished', True)
+                        return out_sr, output_audio
 
-    def support(self, runner: Runner) -> bool:
-        for type_name in runner.processor_q:
-            if self.preprocess_dict.get(type_name) is None:
-                raise NotImplementedError
+        except Exception as e:
+            await self.report_progress('error', True)
 
-        return True
+            self.logger.error(f'{e.__class__.__name__}: {e}',
+                              exc_info=e if self.verbose else None)
+
+        return None, None
 
     def complete(self, runner: Runner):
         pass

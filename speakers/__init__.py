@@ -2,7 +2,12 @@ from speakers.common.registry import registry
 import torch
 import os
 import util
+from speakers.speakers import set_main_logger, Speaker
 
+__all__=[
+    "Speaker",
+    "set_main_logger",
+]
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 registry.register_path("library_root", root_dir)

@@ -10,8 +10,8 @@ preprocess:
         voice_config_file: "model/config.json"
     - rvc_processor:
         name: "rvc_speakers"
-        hubert_model_path: "rvc/model/hubert_base.pt"
-        rvc_config_file: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/rvc/rvc.yaml"
+        hubert_model_path: "model/hubert_base.pt"
+        rvc_config_file: "rvc.yaml"
 
 
 tasks:

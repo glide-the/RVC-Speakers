@@ -112,7 +112,10 @@ class RVCSpeakers(BaseProcessor):
         hubert_model_path = cfg.get("hubert_model_path", "")
         rvc_config_file = cfg.get("rvc_config_file", "")
 
-        return cls(hubert_model_path=hubert_model_path, rvc_config_file=rvc_config_file)
+        return cls(hubert_model_path=os.path.join(registry.get_path("rvc_library_root"),
+                                                  hubert_model_path),
+                   rvc_config_file=os.path.join(registry.get_path("rvc_library_root"),
+                                                rvc_config_file))
 
     def match(self, data: ProcessorData):
         return "RVC" in data.type
