@@ -8,7 +8,7 @@ from pathlib import Path
 
 def MakeFastAPIOffline(
         app: FastAPI,
-        static_dir=f"{registry.get_path('server_library_root')}/static",
+        static_dir="/static",
         static_url="/static-offline-docs",
         docs_url: Optional[str] = "/docs",
         redoc_url: Optional[str] = "/redoc",
@@ -39,7 +39,7 @@ def MakeFastAPIOffline(
     # Set up static file mount
     app.mount(
         static_url,
-        StaticFiles(directory=Path(static_dir).as_posix()),
+        StaticFiles(directory=Path(f"{registry.get_path('server_library_root')}{static_dir}").as_posix()),
         name="static-offline-docs",
     )
 

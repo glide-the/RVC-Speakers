@@ -26,11 +26,10 @@ def start_translator_client_proc(speakers_config_file: str):
         sys.executable,
         '-m', 'speakers',
         '--mode', 'web_runner',
-        '--host', speakers_config_file,
-        '--port', str(port)
+        '--speakers-config-file', speakers_config_file
     ]
 
-    proc = subprocess.Popen(cmds, cwd=registry.get_path("library_root"))
+    proc = subprocess.Popen(cmds, cwd=f"{registry.get_path('library_root')}/../")
     return proc
 
 
@@ -45,7 +44,7 @@ async def start_async_app(speakers_config_file: str):
 
 async def dispatch(speakers_config_file: str):
     runner = await start_async_app(speakers_config_file=speakers_config_file)
-    # Create client process that will execute translation tasks
+    # Create client process
     print()
     client_process = start_translator_client_proc(speakers_config_file)
 
@@ -61,7 +60,7 @@ async def dispatch(speakers_config_file: str):
                     state = runner.task_states[task_id]
                     state['info'] = 'error'
                     state['finished'] = True
-                client_process = start_translator_client_proc(host, port)
+                client_process = start_translator_client_proc(speakers_config_file=speakers_config_file)
 
             # Filter queued and finished tasks
             now = time.time()

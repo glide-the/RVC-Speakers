@@ -91,8 +91,8 @@ class RunnerBootstrapBaseWeb(Bootstrap):
         def run_server():
             uvicorn.run(app, host=self.host, port=self.port)
 
-        server_thread = threading.Thread(target=run_server)
-        server_thread.start()
+        self.server_thread = threading.Thread(target=run_server)
+        self.server_thread.start()
 
     async def destroy(self):
         server_thread = self.server_thread

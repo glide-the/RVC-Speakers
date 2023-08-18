@@ -155,7 +155,7 @@ class WebSpeaker(Speaker):
         """
         监听server端任务，注册任务监听器接收消息通知
         """
-        logger.info('Waiting for translation tasks')
+        logger.info('Waiting for WebSpeaker tasks')
 
         async def sync_state(state: str, finished: bool):
             # wait for translation to be saved first (bad solution?)
