@@ -53,6 +53,7 @@ class VitsProcessorData(ProcessorData):
 class VitsToVoice(BaseProcessor):
 
     def __init__(self, vits_model_path: str, voice_config_file: str):
+        super().__init__()
         import nest_asyncio
         nest_asyncio.apply()
         self.limitation = os.getenv("SYSTEM") == "spaces"  # limit text and audio length in huggingface spaces

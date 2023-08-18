@@ -47,7 +47,7 @@ class VoiceTask(BaseTask):
             self.logger.info('dispatch')
 
             # 开启任务1
-            await self.report_progress('voice_task')
+            await self.report_progress(task_id=runner.task_id, runner_stat='voice_task', state='dispatch_voice_task')
             data = runner.flow_data
             if 'voice' in data.type:
                 if 'VITS' in data.vits.type:
@@ -66,15 +66,19 @@ class VoiceTask(BaseTask):
 
                         out_sr, output_audio = rvc_preprocess_object(data.rvc)
 
+                        # 完成任务，构建响应数据
+                        await self.report_progress(task_id=runner.task_id,
+                                                   runner_stat='voice_task',
+                                                   state='finished',
+                                                   finished=True)
+
                         del audio_np
                         del runner
-
-                        # 完成任务，构建响应数据
-                        await self.report_progress('finished', True)
                         return out_sr, output_audio
 
         except Exception as e:
-            await self.report_progress('error', True)
+            await self.report_progress(task_id=runner.task_id, runner_stat='voice_task',
+                                       state='error', finished=True)
 
             self.logger.error(f'{e.__class__.__name__}: {e}',
                               exc_info=e if self.verbose else None)

@@ -56,8 +56,12 @@ class BaseTask:
         return cls(preprocess_dict={})
 
     def _add_logger_hook(self):
+        """
+        默认的任务日志监听者
+        :return:
+        """
         LOG_MESSAGES = {
-            'voice_task': 'Running voice_task',
+            'dispatch_voice_task': 'dispatch_voice_task',
             'saved': 'Saving results',
         }
         LOG_MESSAGES_SKIP = {
@@ -67,7 +71,7 @@ class BaseTask:
             'error': 'task error',
         }
 
-        async def ph(state, finished):
+        async def ph(task_id: str, runner_stat: str, state: str, finished: bool = False):
             if state in LOG_MESSAGES:
                 self.logger.info(LOG_MESSAGES[state])
             elif state in LOG_MESSAGES_SKIP:
@@ -78,11 +82,24 @@ class BaseTask:
         self.add_progress_hook(ph)
 
     def add_progress_hook(self, ph):
+        """
+        注册监听器
+        :param ph: 监听者
+        :return:
+        """
         self._progress_hooks.append(ph)
 
-    async def report_progress(self, state: str, finished: bool = False):
+    async def report_progress(self, task_id: str, runner_stat: str, state: str, finished: bool = False):
+        """
+        任务通知监听器
+        :param task_id: 任务id
+        :param runner_stat: 任务执行位置
+        :param state: 状态
+        :param finished: 是否完成
+        :return:
+        """
         for ph in self._progress_hooks:
-            await ph(state, finished)
+            await ph(task_id, runner_stat, state, finished)
 
     @classmethod
     def prepare(cls, runner: Runner):

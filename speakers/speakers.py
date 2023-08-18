@@ -1,6 +1,8 @@
 import numpy as np
 import logging
 import os
+import requests
+import asyncio
 from omegaconf import OmegaConf
 
 from speakers.common.registry import registry
@@ -14,6 +16,9 @@ from speakers.tasks import get_task, load_task
 from speakers.tasks import VoiceFlowData, Runner
 
 from scipy.io.wavfile import write as write_wav
+
+from speakers.common.log import add_file_logger, remove_file_logger
+
 
 logger = logging.getLogger('speaker_runner')
 
@@ -51,7 +56,6 @@ class Speaker:
 
     def __init__(self, speakers_config_file: str = 'speakers.yaml',
                  verbose: bool = False):
-
         self.verbose = verbose
 
         self.result_sub_folder = ''
@@ -130,7 +134,83 @@ class Speaker:
             # save audio to disk
             write_wav(self._result_path(f"{task_id}.wav"), out_sr, output)
             del output
-            await voice_task.report_progress('saved', True)
+            await voice_task.report_progress(task_id=runner.task_id, runner_stat='voice_task', state='saved', finished=True)
 
     def _result_path(self, path: str) -> str:
         return os.path.join(registry.get_path("library_root"), 'result', self.result_sub_folder, path)
+
+
+class WebSpeaker(Speaker):
+    def __init__(self, speakers_config_file: str = 'speakers.yaml',
+                 verbose: bool = False, host: str = "127.0.0.1", port: int = 6001,
+                 nonce: str = ''):
+        super().__init__(speakers_config_file=speakers_config_file, verbose=verbose)
+        self.host = host
+        self.port = port
+        self.nonce = nonce
+        self._task_id = None
+        self._params = None
+
+    async def listen(self, translation_params: dict = None):
+        """
+        监听server端任务，注册任务监听器接收消息通知
+        """
+        logger.info('Waiting for translation tasks')
+
+        async def sync_state(state: str, finished: bool):
+            # wait for translation to be saved first (bad solution?)
+            finished = finished and not state == 'finished'
+            while True:
+                try:
+                    data = {
+                        'task_id': self._task_id,
+                        'nonce': self.nonce,
+                        'state': state,
+                        'finished': finished,
+                    }
+                    requests.post(f'http://{self.host}:{self.port}/task-update-internal', json=data, timeout=20)
+                    break
+                except Exception:
+                    # if translation is finished server has to know
+                    if finished:
+                        continue
+                    else:
+                        break
+        voice_task = get_task("voice_task")
+        voice_task.add_progress_hook(sync_state)
+
+        while True:
+            self._task_id, self._params = self._get_task()
+            if self._params and 'exit' in self._params:
+                break
+            if not (self._task_id and self._params):
+                await asyncio.sleep(0.1)
+                continue
+
+            self.result_sub_folder = self._task_id
+            logger.info(f'Processing task {self._task_id}')
+            if translation_params is not None:
+                # Combine default params with params chosen by webserver
+                for p, default_value in translation_params.items():
+                    current_value = self._params.get(p)
+                    self._params[p] = current_value if current_value is not None else default_value
+            if self.verbose:
+                # Write log file
+                log_file = self._result_path('log.txt')
+                add_file_logger(log_file)
+
+            await self.preparation_runner(params=self._params)
+
+            if self.verbose:
+                remove_file_logger(log_file)
+            self._task_id = None
+            self._params = None
+            self.result_sub_folder = ''
+
+    def _get_task(self):
+        try:
+            rjson = requests.get(f'http://{self.host}:{self.port}/task-internal?nonce={self.nonce}',
+                                 timeout=3600).json()
+            return rjson.get('task_id'), rjson.get('data')
+        except Exception:
+            return None, None

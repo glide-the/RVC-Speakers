@@ -1,11 +1,12 @@
 from speakers.common.registry import registry
+from speakers.speakers import set_main_logger, Speaker, WebSpeaker
 import torch
 import os
 import util
-from speakers.speakers import set_main_logger, Speaker
 
 __all__=[
     "Speaker",
+    "WebSpeaker",
     "set_main_logger",
 ]
 
