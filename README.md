@@ -53,7 +53,7 @@ rvc目录
 pip install -e .
 python -m speakers --verbose --mode web
 ```
-直接启动
+2、直接启动
 ```shell
 python start.py--verbose --mode web
 ```
