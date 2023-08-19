@@ -1,8 +1,13 @@
 from speakers.server.model.flow_data import VoiceFlowData
-from speakers.server.model.result import BaseResponse, TaskInfoResponse, TaskVoiceFlowInfo
+from speakers.server.model.result import (BaseResponse,
+                                          TaskInfoResponse,
+                                          TaskVoiceFlowInfo,
+                                          RunnerState,
+                                          TaskRunnerResponse)
 from speakers.server.bootstrap.bootstrap_register import get_bootstrap
 from speakers.common.utils import get_abs_path
-from fastapi import File, Form, Body, Query, UploadFile
+from fastapi import File, Form, Body, Query
+from fastapi.responses import FileResponse
 import hashlib
 import os
 import time
@@ -31,7 +36,11 @@ def calculate_md5(input_string):
 
 
 async def submit_async(flowData: VoiceFlowData):
-    """Adds new task to the queue"""
+    """
+        Adds new task to the queue
+        task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
+                  f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
+    """
 
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
 
@@ -40,24 +49,34 @@ async def submit_async(flowData: VoiceFlowData):
     now = time.time()
     flowData.created_at = now
     flowData.requested_at = now
+
+    task_state = {}
     print(f'New `submit` task {task_id}')
     if os.path.exists(get_abs_path(f'result/{task_id}.wav')):
-        runner_bootstrap_web.task_states[task_id] = {
+        task_state = {
+            'task_id': task_id,
             'info': 'saved',
             'finished': True,
         }
-        runner_bootstrap_web.task_data[task_id] = flowData
+        if task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
+            runner_bootstrap_web.task_states[task_id] = task_state
+            runner_bootstrap_web.task_data[task_id] = flowData
     elif task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
         os.makedirs(get_abs_path('result'), exist_ok=True)
-
-        runner_bootstrap_web.task_data[task_id] = flowData
-        runner_bootstrap_web.queue.append(task_id)
-        runner_bootstrap_web.task_states[task_id] = {
+        task_state = {
+            'task_id': task_id,
             'info': 'pending',
             'finished': False,
         }
 
-    return BaseResponse(code=200, msg="提交任务成功")
+        runner_bootstrap_web.task_data[task_id] = flowData
+        runner_bootstrap_web.queue.append(task_id)
+
+        runner_bootstrap_web.task_states[task_id] = task_state
+    else:
+        task_state = runner_bootstrap_web.task_states[task_id]
+
+    return TaskRunnerResponse(code=200, msg="提交任务成功", data=task_state)
 
 
 async def get_task_async(nonce: str = Query(..., examples=["samples"])):
@@ -68,16 +87,54 @@ async def get_task_async(nonce: str = Query(..., examples=["samples"])):
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
 
     if constant_compare(nonce, runner_bootstrap_web.nonce):
-        if len(runner_bootstrap_web.queue) > 0 and len(runner_bootstrap_web.ongoing_tasks) < runner_bootstrap_web.max_ongoing_tasks:
-            task_id = runner_bootstrap_web.queue.popleft()
-            if task_id in runner_bootstrap_web.task_data:
-                data = runner_bootstrap_web.task_data[task_id]
-                runner_bootstrap_web.ongoing_tasks.append(task_id)
-                info = TaskVoiceFlowInfo(task_id=task_id, data=data)
-                return TaskInfoResponse(code=200, msg="成功", data=info)
+        if len(runner_bootstrap_web.ongoing_tasks) < runner_bootstrap_web.max_ongoing_tasks:
+            if len(runner_bootstrap_web.queue) > 0:
+                task_id = runner_bootstrap_web.queue.popleft()
+                if task_id in runner_bootstrap_web.task_data:
+                    data = runner_bootstrap_web.task_data[task_id]
+                    runner_bootstrap_web.ongoing_tasks.append(task_id)
+                    info = TaskVoiceFlowInfo(task_id=task_id, data=data)
+                    return TaskInfoResponse(code=200, msg="成功", data=info)
 
-            else:
-                return BaseResponse(code=200, msg="成功")
+            return BaseResponse(code=200, msg="成功")
+
         else:
             return BaseResponse(code=200, msg="max_ongoing_tasks")
     return BaseResponse(code=401, msg="无法获取任务")
+
+
+async def post_task_update_async(runner_state: RunnerState):
+    """
+    Lets the translator update the task state it is working on.
+    """
+
+    runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
+
+    if constant_compare(runner_state.nonce, runner_bootstrap_web.nonce):
+        task_id = runner_state.task_id
+        if task_id in runner_bootstrap_web.task_states and task_id in runner_bootstrap_web.task_data:
+            runner_bootstrap_web.task_states[task_id] = {
+                'info': runner_state.state,
+                'finished': runner_state.finished,
+            }
+            if runner_state.finished:
+                try:
+                    i = runner_bootstrap_web.ongoing_tasks.index(task_id)
+                    runner_bootstrap_web.ongoing_tasks.pop(i)
+                except ValueError:
+                    pass
+
+            print(f'Task state {task_id} to {runner_bootstrap_web.task_states[task_id]}')
+
+    return BaseResponse(code=200, msg="成功")
+
+
+async def result_async(task_id: str = Query(..., examples=["task_id"])):
+    filepath = get_abs_path(f'result/{task_id}.wav')
+    if os.path.exists(filepath):
+        return FileResponse(
+            path=filepath,
+            filename=f"{task_id}.wav",
+            media_type="multipart/form-data")
+    else:
+        return BaseResponse(code=500, msg=f"{task_id}.wav 读取文件失败")

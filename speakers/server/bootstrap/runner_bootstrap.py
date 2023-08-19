@@ -3,7 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from speakers.server.utils import MakeFastAPIOffline
 from speakers.server.model.result import BaseResponse
 from speakers.server.servlet.document import document
-from speakers.server.servlet.runner import submit_async, get_task_async
+from speakers.server.servlet.runner import (submit_async,
+                                            get_task_async,
+                                            post_task_update_async,
+                                            result_async)
 from speakers.server.bootstrap.bootstrap_register import bootstrap_register
 from speakers.server.bootstrap.base import Bootstrap
 import uvicorn
@@ -56,6 +59,12 @@ class RunnerBootstrapBaseWeb(Bootstrap):
         self.app.get("/runner/task-internal",
                      tags=["Runner"],
                      summary="内部获取调度Runner")(get_task_async)
+        self.app.post("/runner/task-update-internal",
+                      tags=["Runner"],
+                      summary="内部同步调度RunnerStat")(post_task_update_async)
+        self.app.get("/runner/result",
+                     tags=["Runner"],
+                     summary="获取任务结果")(result_async)
         app = self.app
 
         def run_server():

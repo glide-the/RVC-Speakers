@@ -1,12 +1,11 @@
-from pydantic import BaseModel
-import pydantic
+from pydantic import BaseModel, Field
 
 from speakers.server.model.flow_data import VoiceFlowData
 
 
 class BaseResponse(BaseModel):
-    code: int = pydantic.Field(200, description="HTTP status code")
-    msg: str = pydantic.Field("success", description="HTTP status message")
+    code: int = Field(200, description="HTTP status code")
+    msg: str = Field("success", description="HTTP status message")
 
     class Config:
         schema_extra = {
@@ -15,6 +14,10 @@ class BaseResponse(BaseModel):
                 "msg": "success",
             }
         }
+
+
+class TaskRunnerResponse(BaseResponse):
+    data: dict
 
 
 class TaskVoiceFlowInfo(BaseModel):
@@ -33,3 +36,12 @@ class TaskInfoResponse(BaseResponse):
                 "data": None,
             }
         }
+
+
+class RunnerState(BaseModel):
+    """RunnerState"""
+    task_id: str
+    runner_stat: str
+    nonce: str
+    state: str
+    finished: bool = Field(default=False)
