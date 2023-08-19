@@ -38,3 +38,22 @@ vits目录
 ``` 
 rvc目录
 ```
+
+### 如何运行
+
+#### 配置文件
+    speakers/speakers.yaml
+
+### 启动命令
+任选一种
+
+1、模块启动
+
+```shell
+pip install -e .
+python -m speakers --verbose --mode web
+```
+直接启动
+```shell
+python start.py--verbose --mode web
+```
