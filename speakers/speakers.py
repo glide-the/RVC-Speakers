@@ -69,7 +69,6 @@ class Speaker:
         任务构建
         """
 
-        vits_voice = get_processors('vits_processor')
         # noise_scale_w: noise_scale_w(控制音素发音长度)
         noise_scale_w = params.vits.noise_scale_w
         # noise_scale(控制感情变化程度)
@@ -168,18 +167,28 @@ class WebSpeaker(Speaker):
         """
         logger.info('Waiting for WebSpeaker tasks')
 
-        async def sync_state(state: str, finished: bool):
+        async def sync_state(task_id: str, runner_stat: str, state: str, finished: bool):
             # wait for translation to be saved first (bad solution?)
             finished = finished and not state == 'finished'
             while True:
                 try:
                     data = {
-                        'task_id': self._task_id,
+                        'task_id': task_id,
+                        'runner_stat': runner_stat,
                         'nonce': self.nonce,
                         'state': state,
                         'finished': finished,
                     }
-                    requests.post(f'http://{self.host}:{self.port}/task-update-internal', json=data, timeout=20)
+                    # 处理每个runner的调度
+                    for _key, _remote_info in self.remote_infos.items():
+
+                        if self._task_results.get(_key) is None or self._task_results.get(_key).get("task_id") is None:
+                            continue
+                        if task_id in self._task_results.get(_key).get("task_id"):
+                            requests.post(
+                                f'http://{_remote_info.get("host")}:{_remote_info.get("port")}/runner/task-update-internal',
+                                json=data, timeout=20)
+                            break
                     break
                 except Exception:
                     # if translation is finished server has to know
@@ -193,19 +202,35 @@ class WebSpeaker(Speaker):
 
         while True:
             self._task_results = self._get_task()
-            if not self._task_results or self._task_results.get("task_id") is None:
+
+            wait_flag = False
+
+            if not self._task_results:
+                wait_flag = True
+
+            # 处理每个runner的调度,如果有任何一个返回了任务，则执行调度
+            for key, remote_info in self.remote_infos.items():
+                if self._task_results.get(key) is None or self._task_results.get(key).get("task_id") is None:
+                    wait_flag = True
+                else:
+                    wait_flag = False
+                    break
+
+            if wait_flag:
                 await asyncio.sleep(1)
                 continue
-
-            logger.info(f'Processing task {self._task_results.get("task_id")}')
 
             if self.verbose:
                 # Write log file
                 log_file = self._result_path('log.txt')
                 add_file_logger(log_file)
 
-            await self.preparation_runner(task_id=self._task_results.get("task_id"),
-                                          params=self._task_results.get("data"))
+            # 处理每个runner的调度
+            for key, remote_info in self.remote_infos.items():
+                logger.info(f'Processing task {self._task_results.get(key).get("task_id")}')
+
+                await self.preparation_runner(task_id=self._task_results.get(key).get("task_id"),
+                                              params=VoiceFlow.parse_obj(self._task_results.get(key).get("data")))
 
             if self.verbose:
                 # Write log file

@@ -23,7 +23,7 @@ def get_text(text, hps):
 class VitsProcessorData(ProcessorData):
     """
         :param text: 生成文本
-        :param language: 默认自动判断语言- 0中文， 1 日文
+        :param language: 序号  ['日本語', '简体中文', 'English', 'Mix']
         :param speaker_id: 讲话人id
         :param noise_scale: noise_scale(控制感情变化程度)
         :param speed: length_scale(控制整体语速)
@@ -32,7 +32,7 @@ class VitsProcessorData(ProcessorData):
     """
     """生成文本"""
     text: str
-    """语言- 0中文， 1 日文"""
+    """语言- 序号  ['日本語', '简体中文', 'English', 'Mix'] """
     language: int
     """讲话人id"""
     speaker_id: int

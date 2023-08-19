@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional
 class VitsProcessorData(BaseModel):
     """生成文本"""
     text: str = Field(default="你好")
-    """语言- 0中文， 1 日文"""
-    language: int = Field(default=0)
+    """语言- 序号  ['日本語', '简体中文', 'English', 'Mix'] """
+    language: int = Field(default=1)
     """讲话人id"""
     speaker_id: int = Field(default=0)
     """ noise_scale(控制感情变化程度)"""

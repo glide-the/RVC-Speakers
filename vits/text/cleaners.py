@@ -284,7 +284,7 @@ def hangul_number(num, sino=True):
   digits = '123456789'
   names = '일이삼사오육칠팔구'
   digit2name = {d: n for d, n in zip(digits, names)}
-  
+
   modifiers = '한 두 세 네 다섯 여섯 일곱 여덟 아홉'
   decimals = '열 스물 서른 마흔 쉰 예순 일흔 여든 아흔'
   digit2mod = {d: mod for d, mod in zip(digits, modifiers.split())}
@@ -470,6 +470,6 @@ def zh_ja_mixture_cleaners(text):
     cleaned_text=japanese_to_romaji_with_accent(japanese_text[4:-4]).replace('ts','ʦ').replace('u','ɯ').replace('...','…')
     text = text.replace(japanese_text,cleaned_text+' ',1)
   text=text[:-1]
-  if re.match('[A-Za-zɯɹəɥ→↓↑]',text[-1]):
+  if len(text) > 0 and re.match('[A-Za-zɯɹəɥ→↓↑]',text[-1]):
     text += '.'
   return text

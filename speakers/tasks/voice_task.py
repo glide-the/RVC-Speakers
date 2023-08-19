@@ -1,8 +1,9 @@
 from typing import Dict
-
 from speakers.processors import ProcessorData, BaseProcessor, get_processors, VitsProcessorData, RvcProcessorData
 from speakers.tasks import BaseTask, Runner, FlowData
 from speakers.common.registry import registry
+
+import traceback
 
 
 class VoiceFlowData(FlowData):
@@ -81,7 +82,9 @@ class VoiceTask(BaseTask):
                                        state='error', finished=True)
 
             self.logger.error(f'{e.__class__.__name__}: {e}',
-                              exc_info=e if self.verbose else None)
+                              exc_info=e)
+
+            traceback.print_exc()
 
         return None, None
 
