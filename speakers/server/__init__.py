@@ -1,14 +1,16 @@
 from speakers.common.registry import registry
-from speakers.server.bootstrap import load_bootstrap, get_bootstrap
+from speakers.server.bootstrap.bootstrap_register import load_bootstrap, get_bootstrap
 
 from omegaconf import OmegaConf
 
 from speakers.common.utils import get_abs_path
+from oscrypto import util as crypto_utils
 
 import asyncio
 import time
 import os
 import sys
+import traceback
 
 import subprocess
 
@@ -19,6 +21,10 @@ registry.register_path("server_library_root", root_dir)
 WEB_CLIENT_TIMEOUT = -1
 # Time before finished tasks get removed from memory
 FINISHED_TASK_REMOVE_TIMEOUT = 1800
+
+
+def generate_nonce():
+    return crypto_utils.rand_bytes(16).hex()
 
 
 def start_translator_client_proc(speakers_config_file: str):
@@ -50,6 +56,7 @@ async def dispatch(speakers_config_file: str):
 
     try:
         while True:
+            """任务队列状态维护"""
             await asyncio.sleep(1)
 
             # Restart client if OOM or similar errors occured
@@ -91,11 +98,5 @@ async def dispatch(speakers_config_file: str):
             # client_process.terminate()
             client_process.kill()
         await runner.destroy()
+        traceback.print_exc()
         raise
-
-    finally:
-
-        if client_process.poll() is None:
-            # client_process.terminate()
-            client_process.kill()
-        await runner.destroy()

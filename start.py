@@ -24,7 +24,7 @@ async def dispatch(args: Namespace):
 
     elif args.mode in 'web_runner':
 
-        translator = WebSpeaker(speakers_config_file=args.speakers_config_file, verbose=args.verbose)
+        translator = WebSpeaker(speakers_config_file=args.speakers_config_file, verbose=args.verbose, nonce=args.nonce)
         await translator.listen(args_dict)
 
 
@@ -37,6 +37,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--verbose', action='store_true', help='Print debug info in result folder')
     parser.add_argument("--speakers-config-file", type=str, default="speakers.yaml")
+    parser.add_argument('--nonce', default='', type=str, help='Used by web module to decide which secret for securing '
+                                                              'internal web server communication')
+
 
     args = None
     try:

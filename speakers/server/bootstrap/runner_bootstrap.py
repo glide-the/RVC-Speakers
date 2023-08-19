@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from speakers.server.utils import MakeFastAPIOffline
 from speakers.server.model.result import BaseResponse
 from speakers.server.servlet.document import document
-from speakers.server.servlet.runner import submit_async
+from speakers.server.servlet.runner import submit_async, get_task_async
 from speakers.server.model.flow_data import BaseFlowData
 from speakers.server.bootstrap.bootstrap_register import bootstrap_register
 from speakers.server.bootstrap.base import Bootstrap
@@ -85,7 +85,10 @@ class RunnerBootstrapBaseWeb(Bootstrap):
                      summary="swagger 文档")(document)
         self.app.post("/runner/submit",
                       tags=["Runner"],
-                      summary="调度Runner")(submit_async)
+                      summary="提交调度Runner")(submit_async)
+        self.app.post("/runner/task-internal",
+                      tags=["Runner"],
+                      summary="内部获取调度Runner")(get_task_async)
         app = self.app
 
         def run_server():
