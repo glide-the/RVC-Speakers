@@ -2,7 +2,7 @@ from typing import Dict
 from speakers.processors import ProcessorData, BaseProcessor, get_processors, VitsProcessorData, RvcProcessorData
 from speakers.tasks import BaseTask, Runner, FlowData
 from speakers.common.registry import registry
-
+from speakers.server.model.flow_data import PayLoad
 import traceback
 
 
@@ -38,8 +38,71 @@ class VoiceTask(BaseTask):
     def preprocess_dict(self) -> Dict[str, BaseProcessor]:
         return self._preprocess_dict
 
-    def prepare(self, runner: Runner):
-        pass
+    def prepare(self, task_id: str, payload: PayLoad) -> Runner:
+        """
+        runner任务构建
+        """
+        params = payload.payload
+
+        # noise_scale_w: noise_scale_w(控制音素发音长度)
+        noise_scale_w = params.vits.noise_scale_w
+        # noise_scale(控制感情变化程度)
+        noise_scale = params.vits.noise_scale
+        # length_scale(控制整体语速)
+        speed = params.vits.speed
+        # 语言
+        language = params.vits.language
+        # vits 讲话人
+        speaker_id = params.vits.speaker_id
+        text = params.vits.text
+
+        # 创建一个 VitsProcessorData 实例
+        vits_processor_data = VitsProcessorData(
+            text=text,
+            language=language,
+            speaker_id=speaker_id,
+            noise_scale=noise_scale,
+            speed=speed,
+            noise_scale_w=noise_scale_w
+        )
+
+        model_index = params.rvc.model_index
+
+        # 变调(整数, 半音数量, 升八度12降八度-12)
+        f0_up_key = params.rvc.f0_up_key
+        f0_method = params.rvc.f0_method
+
+        # 检索特征占比
+        index_rate = params.rvc.index_rate
+        # >=3则使用对harvest音高识别的结果使用中值滤波，数值为滤波半径，使用可以削弱哑音
+        filter_radius = params.rvc.filter_radius
+        # 输入源音量包络替换输出音量包络融合比例，越靠近1越使用输出包络
+        rms_mix_rate = params.rvc.rms_mix_rate
+        # 后处理重采样至最终采样率，0为不进行重采样
+        resample_rate = params.rvc.resample_sr
+
+        rvc_processor_data = RvcProcessorData(
+            model_index=model_index,
+            f0_up_key=f0_up_key,
+            f0_method=f0_method,
+            index_rate=index_rate,
+            filter_radius=filter_radius,
+            rms_mix_rate=rms_mix_rate,
+            resample_sr=resample_rate
+        )
+
+        # 创建一个 VoiceFlowData 实例，并将 VitsProcessorData 实例作为参数传递
+        voice_flow_data = VoiceFlowData(vits=vits_processor_data,
+                                        rvc=rvc_processor_data)
+
+        # 创建 Runner 实例并传递上面创建的 VoiceFlowData 实例作为参数
+
+        runner = Runner(
+            task_id=task_id,
+            flow_data=voice_flow_data
+        )
+
+        return runner
 
     async def dispatch(self, runner: Runner):
 

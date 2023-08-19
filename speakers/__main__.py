@@ -4,7 +4,7 @@ import logging
 from argparse import Namespace
 from speakers.common.log import get_logger, set_log_level
 from speakers import set_main_logger, Speaker, WebSpeaker
-from speakers.server.model.flow_data import VoiceFlowData as VoiceFlow
+from speakers.server.model.flow_data import PayLoad
 from speakers.server import dispatch as dispatch_web
 import argparse
 
@@ -24,7 +24,7 @@ async def dispatch(args: Namespace):
     if args.mode in 'demo':
 
         speaker = Speaker(speakers_config_file=args.speakers_config_file, verbose=args.verbose)
-        await speaker.preparation_runner(task_id="0", params=VoiceFlow())
+        await speaker.preparation_runner(task_id="0", payload=PayLoad())
     elif args.mode in 'web':
 
         await dispatch_web(speakers_config_file=args.speakers_config_file)

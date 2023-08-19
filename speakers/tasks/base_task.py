@@ -3,7 +3,7 @@ from typing import List, Dict
 
 from speakers.load.serializable import Serializable
 from speakers.processors import ProcessorData, BaseProcessor
-from collections import deque
+from speakers.server.model.flow_data import PayLoad
 
 import logging
 
@@ -102,12 +102,13 @@ class BaseTask:
             await ph(task_id, runner_stat, state, finished)
 
     @classmethod
-    def prepare(cls, runner: Runner):
+    def prepare(cls, task_id: str, payload: PayLoad) -> Runner:
         """
         预处理
 
         Args:
-            runner (Runner): runner flow data
+            task_id (task_id): runner task_id
+            payload (PayLoad): runner flow data
 
         Raises:
             NotImplementedError: This method should be overridden by subclasses.

@@ -1,4 +1,4 @@
-from speakers.server.model.flow_data import VoiceFlowData
+from speakers.server.model.flow_data import PayLoad
 from speakers.server.model.result import (BaseResponse,
                                           TaskInfoResponse,
                                           TaskVoiceFlowInfo,
@@ -35,20 +35,22 @@ def calculate_md5(input_string):
     return md5_hash.hexdigest()
 
 
-async def submit_async(flowData: VoiceFlowData):
+async def submit_async(payload: PayLoad):
     """
         Adds new task to the queue
         task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
-                  f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
+              f'-{flowData.vits.noise_scale}-{flowData.vits.speed}-{flowData.vits.noise_scale_w}' \
+              f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
     """
 
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
-
+    flowData = payload.payload
     task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
+              f'-{flowData.vits.noise_scale}-{flowData.vits.speed}-{flowData.vits.noise_scale_w}' \
               f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
     now = time.time()
-    flowData.created_at = now
-    flowData.requested_at = now
+    payload.created_at = now
+    payload.requested_at = now
 
     task_state = {}
     print(f'New `submit` task {task_id}')
@@ -60,7 +62,7 @@ async def submit_async(flowData: VoiceFlowData):
         }
         if task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
             runner_bootstrap_web.task_states[task_id] = task_state
-            runner_bootstrap_web.task_data[task_id] = flowData
+            runner_bootstrap_web.task_data[task_id] = payload
     elif task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
         os.makedirs(get_abs_path('result'), exist_ok=True)
         task_state = {
@@ -69,7 +71,7 @@ async def submit_async(flowData: VoiceFlowData):
             'finished': False,
         }
 
-        runner_bootstrap_web.task_data[task_id] = flowData
+        runner_bootstrap_web.task_data[task_id] = payload
         runner_bootstrap_web.queue.append(task_id)
 
         runner_bootstrap_web.task_states[task_id] = task_state

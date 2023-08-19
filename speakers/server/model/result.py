@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from speakers.server.model.flow_data import VoiceFlowData
+from speakers.server.model.flow_data import PayLoad
 
 
 class BaseResponse(BaseModel):
@@ -22,7 +22,7 @@ class TaskRunnerResponse(BaseResponse):
 
 class TaskVoiceFlowInfo(BaseModel):
     task_id: str
-    data: VoiceFlowData
+    data: PayLoad
 
 
 class TaskInfoResponse(BaseResponse):

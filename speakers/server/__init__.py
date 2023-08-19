@@ -80,19 +80,19 @@ async def dispatch(speakers_config_file: str, nonce: str = None):
             now = time.time()
             to_del_task_ids = set()
             for tid, s in runner.task_states.items():
-                flowData = runner.task_data[tid]
+                payload = runner.task_data[tid]
                 # Remove finished tasks after 30 minutes
-                if s['finished'] and now - flowData.created_at > FINISHED_TASK_REMOVE_TIMEOUT:
+                if s['finished'] and now - payload.created_at > FINISHED_TASK_REMOVE_TIMEOUT:
                     to_del_task_ids.add(tid)
 
                 # Remove queued tasks without web client
                 elif WEB_CLIENT_TIMEOUT >= 0:
                     if tid not in runner.ongoing_tasks and not s['finished'] \
-                            and now - d['requested_at'] > WEB_CLIENT_TIMEOUT:
+                            and now - payload.requested_at > WEB_CLIENT_TIMEOUT:
                         print('REMOVING TASK', tid)
                         to_del_task_ids.add(tid)
                         try:
-                            runner.deque.remove(tid)
+                            runner.queue.remove(tid)
                         except Exception:
                             pass
 
