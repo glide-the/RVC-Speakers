@@ -27,32 +27,39 @@ def generate_nonce():
     return crypto_utils.rand_bytes(16).hex()
 
 
-def start_translator_client_proc(speakers_config_file: str):
+def start_translator_client_proc(speakers_config_file: str, nonce: str = None):
     cmds = [
         sys.executable,
         '-m', 'speakers',
         '--mode', 'web_runner',
-        '--speakers-config-file', speakers_config_file
+        '--speakers-config-file', speakers_config_file,
+        '--nonce', nonce,
     ]
 
     proc = subprocess.Popen(cmds, cwd=f"{registry.get_path('library_root')}/../")
     return proc
 
 
-async def start_async_app(speakers_config_file: str):
+async def start_async_app(speakers_config_file: str, nonce: str = None):
     config = OmegaConf.load(get_abs_path(speakers_config_file))
     load_bootstrap(config=config.get("bootstrap"))
 
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
+
+    runner_bootstrap_web.set_nonce(nonce=nonce)
     await runner_bootstrap_web.run()
     return runner_bootstrap_web
 
 
-async def dispatch(speakers_config_file: str):
-    runner = await start_async_app(speakers_config_file=speakers_config_file)
+async def dispatch(speakers_config_file: str, nonce: str = None):
+
+    if nonce is None:
+        nonce = os.getenv('MT_WEB_NONCE', generate_nonce())
+
+    runner = await start_async_app(speakers_config_file=speakers_config_file, nonce=nonce)
     # Create client process
     print()
-    client_process = start_translator_client_proc(speakers_config_file)
+    client_process = start_translator_client_proc(speakers_config_file, nonce=nonce)
 
     try:
         while True:
