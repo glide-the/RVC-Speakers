@@ -59,7 +59,7 @@ class Speaker:
 
     async def preparation_runner(self, task_id: str, payload: PayLoad = None):
         voice_task = get_task(payload.parameter.task_name)
-        runner = voice_task.prepare(task_id=task_id, payload=payload)
+        runner = voice_task.prepare(payload=payload)
 
         out_sr, output = await voice_task.dispatch(runner=runner)
         if output is not None:

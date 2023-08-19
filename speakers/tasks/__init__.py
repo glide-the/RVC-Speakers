@@ -12,6 +12,7 @@ __all__ = [
     "load_task",
     "get_task",
     "VoiceFlowData",
+    "tasks_cache"
 ]
 
 tasks_cache = {}

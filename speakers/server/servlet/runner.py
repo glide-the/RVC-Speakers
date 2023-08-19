@@ -8,7 +8,7 @@ from speakers.server.bootstrap.bootstrap_register import get_bootstrap
 from speakers.common.utils import get_abs_path
 from fastapi import File, Form, Body, Query
 from fastapi.responses import FileResponse
-import hashlib
+from speakers.common.registry import registry
 import os
 import time
 
@@ -29,12 +29,6 @@ def constant_compare(a, b):
     return result == 0
 
 
-def calculate_md5(input_string):
-    md5_hash = hashlib.md5()
-    md5_hash.update(input_string.encode('utf-8'))
-    return md5_hash.hexdigest()
-
-
 async def submit_async(payload: PayLoad):
     """
         Adds new task to the queue
@@ -44,10 +38,10 @@ async def submit_async(payload: PayLoad):
     """
 
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
-    flowData = payload.payload
-    task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
-              f'-{flowData.vits.noise_scale}-{flowData.vits.speed}-{flowData.vits.noise_scale_w}' \
-              f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
+    task = registry.get_task_class(payload.parameter.task_name)
+
+    runner = task.prepare(payload=payload)
+    task_id = runner.task_id
     now = time.time()
     payload.created_at = now
     payload.requested_at = now

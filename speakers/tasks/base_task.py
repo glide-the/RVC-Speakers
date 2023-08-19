@@ -102,12 +102,11 @@ class BaseTask:
             await ph(task_id, runner_stat, state, finished)
 
     @classmethod
-    def prepare(cls, task_id: str, payload: PayLoad) -> Runner:
+    def prepare(cls, payload: PayLoad) -> Runner:
         """
         预处理
 
         Args:
-            task_id (task_id): runner task_id
             payload (PayLoad): runner flow data
 
         Raises:

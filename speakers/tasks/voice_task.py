@@ -4,6 +4,7 @@ from speakers.tasks import BaseTask, Runner, FlowData
 from speakers.common.registry import registry
 from speakers.server.model.flow_data import PayLoad
 import traceback
+import hashlib
 
 
 class VoiceFlowData(FlowData):
@@ -14,6 +15,12 @@ class VoiceFlowData(FlowData):
     def type(self) -> str:
         """Type of the FlowData Message, used for serialization."""
         return "voice"
+
+
+def calculate_md5(input_string):
+    md5_hash = hashlib.md5()
+    md5_hash.update(input_string.encode('utf-8'))
+    return md5_hash.hexdigest()
 
 
 @registry.register_task("voice_task")
@@ -38,7 +45,8 @@ class VoiceTask(BaseTask):
     def preprocess_dict(self) -> Dict[str, BaseProcessor]:
         return self._preprocess_dict
 
-    def prepare(self, task_id: str, payload: PayLoad) -> Runner:
+    @classmethod
+    def prepare(cls, payload: PayLoad) -> Runner:
         """
         runner任务构建
         """
@@ -96,7 +104,10 @@ class VoiceTask(BaseTask):
                                         rvc=rvc_processor_data)
 
         # 创建 Runner 实例并传递上面创建的 VoiceFlowData 实例作为参数
-
+        flowData = payload.payload
+        task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
+                  f'-{flowData.vits.noise_scale}-{flowData.vits.speed}-{flowData.vits.noise_scale_w}' \
+                  f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
         runner = Runner(
             task_id=task_id,
             flow_data=voice_flow_data
