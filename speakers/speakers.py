@@ -18,7 +18,9 @@ from speakers.tasks import VoiceFlowData, Runner
 from scipy.io.wavfile import write as write_wav
 
 from speakers.common.log import add_file_logger, remove_file_logger
+from speakers.server.model.flow_data import VoiceFlowData as VoiceFlow
 
+import traceback
 
 logger = logging.getLogger('speaker_runner')
 
@@ -58,28 +60,27 @@ class Speaker:
                  verbose: bool = False):
         self.verbose = verbose
 
-        self.result_sub_folder = ''
         config = OmegaConf.load(get_abs_path(speakers_config_file))
         load_preprocess(config=config.get('preprocess'))
         load_task(config.get("tasks"))
 
-    async def preparation_runner(self, params: dict = None):
+    async def preparation_runner(self, task_id: str, params: VoiceFlow = None):
         """
         任务构建
         """
 
         vits_voice = get_processors('vits_processor')
         # noise_scale_w: noise_scale_w(控制音素发音长度)
-        noise_scale_w = params.get("noise_scale_w", 1)
+        noise_scale_w = params.vits.noise_scale_w
         # noise_scale(控制感情变化程度)
-        noise_scale = params.get("noise_scale", 0.5)
+        noise_scale = params.vits.noise_scale
         # length_scale(控制整体语速)
-        speed = params.get("noise_scale", 1)
+        speed = params.vits.speed
         # 语言
-        language = params.get("language", vits_voice.lang.index('简体中文'))
+        language = params.vits.language
         # vits 讲话人
-        speaker_id = params.get("speaker_id", 0)
-        text = params.get("text", '你好')
+        speaker_id = params.vits.speaker_id
+        text = params.vits.text
 
         # 创建一个 VitsProcessorData 实例
         vits_processor_data = VitsProcessorData(
@@ -91,20 +92,20 @@ class Speaker:
             noise_scale_w=noise_scale_w
         )
 
-        model_index = params.get("model_index", 0)
+        model_index = params.rvc.model_index
 
         # 变调(整数, 半音数量, 升八度12降八度-12)
-        f0_up_key = params.get("f0_up_key", 0)
-        f0_method = params.get("f0_method", 'rmvpe')
+        f0_up_key = params.rvc.f0_up_key
+        f0_method = params.rvc.f0_method
 
         # 检索特征占比
-        index_rate = params.get("index_rate", 0.9)
+        index_rate = params.rvc.index_rate
         # >=3则使用对harvest音高识别的结果使用中值滤波，数值为滤波半径，使用可以削弱哑音
-        filter_radius = params.get("filter_radius", 1)
+        filter_radius = params.rvc.filter_radius
         # 输入源音量包络替换输出音量包络融合比例，越靠近1越使用输出包络
-        rms_mix_rate = params.get("rms_mix_rate", 1)
+        rms_mix_rate = params.rvc.rms_mix_rate
         # 后处理重采样至最终采样率，0为不进行重采样
-        resample_rate = params.get("resample_rate", 0)
+        resample_rate = params.rvc.resample_sr
 
         rvc_processor_data = RvcProcessorData(
             model_index=model_index,
@@ -121,7 +122,7 @@ class Speaker:
                                         rvc=rvc_processor_data)
 
         # 创建 Runner 实例并传递上面创建的 VoiceFlowData 实例作为参数
-        task_id = params.get("task_id", '0')
+
         runner = Runner(
             task_id=task_id,
             flow_data=voice_flow_data
@@ -134,24 +135,34 @@ class Speaker:
             # save audio to disk
             write_wav(self._result_path(f"{task_id}.wav"), out_sr, output)
             del output
-            await voice_task.report_progress(task_id=runner.task_id, runner_stat='voice_task', state='saved', finished=True)
+            await voice_task.report_progress(task_id=runner.task_id, runner_stat='voice_task', state='saved',
+                                             finished=True)
 
     def _result_path(self, path: str) -> str:
-        return os.path.join(registry.get_path("library_root"), 'result', self.result_sub_folder, path)
+        return os.path.join(registry.get_path("library_root"), 'result', path)
 
 
 class WebSpeaker(Speaker):
     def __init__(self, speakers_config_file: str = 'speakers.yaml',
-                 verbose: bool = False, host: str = "127.0.0.1", port: int = 6001,
+                 verbose: bool = False,
                  nonce: str = ''):
         super().__init__(speakers_config_file=speakers_config_file, verbose=verbose)
-        self.host = host
-        self.port = port
-        self.nonce = nonce
-        self._task_id = None
-        self._params = None
 
-    async def listen(self, translation_params: dict = None):
+        config = OmegaConf.load(get_abs_path(speakers_config_file))
+        remote_infos = {}
+        for bootstraps in config.get("bootstrap"):
+            for key, bootstrap_cfg in bootstraps.items():  # 使用 .items() 方法获取键值对
+
+                remote_infos[bootstrap_cfg.name] = {
+                    'host': bootstrap_cfg.host,
+                    'port': bootstrap_cfg.port
+                }
+
+        self.remote_infos = remote_infos
+        self.nonce = nonce
+        self._task_results = {}
+
+    async def listen(self):
         """
         监听server端任务，注册任务监听器接收消息通知
         """
@@ -176,41 +187,45 @@ class WebSpeaker(Speaker):
                         continue
                     else:
                         break
+
         voice_task = get_task("voice_task")
         voice_task.add_progress_hook(sync_state)
 
         while True:
-            self._task_id, self._params = self._get_task()
-            if self._params and 'exit' in self._params:
-                break
-            if not (self._task_id and self._params):
-                await asyncio.sleep(0.1)
+            self._task_results = self._get_task()
+            if not self._task_results or self._task_results.get("task_id") is None:
+                await asyncio.sleep(1)
                 continue
 
-            self.result_sub_folder = self._task_id
-            logger.info(f'Processing task {self._task_id}')
-            if translation_params is not None:
-                # Combine default params with params chosen by webserver
-                for p, default_value in translation_params.items():
-                    current_value = self._params.get(p)
-                    self._params[p] = current_value if current_value is not None else default_value
+            logger.info(f'Processing task {self._task_results.get("task_id")}')
+
             if self.verbose:
                 # Write log file
                 log_file = self._result_path('log.txt')
                 add_file_logger(log_file)
 
-            await self.preparation_runner(params=self._params)
+            await self.preparation_runner(task_id=self._task_results.get("task_id"),
+                                          params=self._task_results.get("data"))
 
             if self.verbose:
+                # Write log file
+                log_file = self._result_path('log.txt')
                 remove_file_logger(log_file)
-            self._task_id = None
-            self._params = None
-            self.result_sub_folder = ''
 
     def _get_task(self):
         try:
-            rjson = requests.get(f'http://{self.host}:{self.port}/task-internal?nonce={self.nonce}',
-                                 timeout=3600).json()
-            return rjson.get('task_id'), rjson.get('data')
+            task_results = {}
+            for key, remote_info in self.remote_infos.items():  # 使用 .items() 方法获取键值对
+
+                response = requests.get(
+                    f'http://{remote_info["host"]}:{remote_info["port"]}/runner/task-internal?nonce={self.nonce}',
+                    timeout=3600)
+                # 检查响应状态码
+                if response.status_code == 200:
+                    task_results[key] = response.json().get("data")
+                else:
+                    raise RuntimeError
+            return task_results
         except Exception:
-            return None, None
+            traceback.print_exc()
+            return None

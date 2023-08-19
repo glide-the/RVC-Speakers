@@ -1,10 +1,27 @@
 from speakers.server.model.flow_data import VoiceFlowData
-from speakers.server.model.result import BaseResponse
+from speakers.server.model.result import BaseResponse, TaskInfoResponse, TaskVoiceFlowInfo
 from speakers.server.bootstrap.bootstrap_register import get_bootstrap
 from speakers.common.utils import get_abs_path
+from fastapi import File, Form, Body, Query, UploadFile
 import hashlib
 import os
 import time
+
+
+def constant_compare(a, b):
+    if isinstance(a, str):
+        a = a.encode('utf-8')
+    if isinstance(b, str):
+        b = b.encode('utf-8')
+    if not isinstance(a, bytes) or not isinstance(b, bytes):
+        return False
+    if len(a) != len(b):
+        return False
+
+    result = 0
+    for x, y in zip(a, b):
+        result |= x ^ y
+    return result == 0
 
 
 def calculate_md5(input_string):
@@ -34,34 +51,33 @@ async def submit_async(flowData: VoiceFlowData):
         os.makedirs(get_abs_path('result'), exist_ok=True)
 
         runner_bootstrap_web.task_data[task_id] = flowData
-        runner_bootstrap_web.deque.append(task_id)
+        runner_bootstrap_web.queue.append(task_id)
         runner_bootstrap_web.task_states[task_id] = {
             'info': 'pending',
             'finished': False,
         }
 
-
     return BaseResponse(code=200, msg="提交任务成功")
 
 
-async def get_task_async(request):
+async def get_task_async(nonce: str = Query(..., examples=["samples"])):
     """
     Called by the translator to get a translation task.
     """
-    global NONCE, ONGOING_TASKS, DEFAULT_TRANSLATION_PARAMS
-    if constant_compare(request.rel_url.query.get('nonce'), NONCE):
-        if len(QUEUE) > 0 and len(ONGOING_TASKS) < MAX_ONGOING_TASKS:
-            task_id = QUEUE.popleft()
-            if task_id in TASK_DATA:
-                data = TASK_DATA[task_id]
-                for p, default_value in DEFAULT_TRANSLATION_PARAMS.items():
-                    current_value = data.get(p)
-                    data[p] = current_value if current_value is not None else default_value
-                if not TASK_DATA[task_id].get('manual', False):
-                    ONGOING_TASKS.append(task_id)
-                return web.json_response({'task_id': task_id, 'data': data})
+
+    runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")
+
+    if constant_compare(nonce, runner_bootstrap_web.nonce):
+        if len(runner_bootstrap_web.queue) > 0 and len(runner_bootstrap_web.ongoing_tasks) < runner_bootstrap_web.max_ongoing_tasks:
+            task_id = runner_bootstrap_web.queue.popleft()
+            if task_id in runner_bootstrap_web.task_data:
+                data = runner_bootstrap_web.task_data[task_id]
+                runner_bootstrap_web.ongoing_tasks.append(task_id)
+                info = TaskVoiceFlowInfo(task_id=task_id, data=data)
+                return TaskInfoResponse(code=200, msg="成功", data=info)
+
             else:
-                return web.json_response({})
+                return BaseResponse(code=200, msg="成功")
         else:
-            return web.json_response({})
-    return web.json_response({})
+            return BaseResponse(code=200, msg="max_ongoing_tasks")
+    return BaseResponse(code=401, msg="无法获取任务")
