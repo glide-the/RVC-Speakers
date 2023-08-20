@@ -9,7 +9,7 @@ from scipy.io.wavfile import write as write_wav
 
 from speakers.common.log import add_file_logger, remove_file_logger
 from speakers.common.registry import registry
-from speakers.common.utils import get_abs_path
+from speakers.common.utils import get_abs_path, get_tmp_path
 from speakers.processors import (load_preprocess
                                  )
 from speakers.server.model.flow_data import PayLoad
@@ -71,7 +71,7 @@ class Speaker:
                                              finished=True)
 
     def _result_path(self, path: str) -> str:
-        return os.path.join(registry.get_path("library_root"), 'result', path)
+        return get_tmp_path(f'result/{path}')
 
 
 class WebSpeaker(Speaker):

@@ -5,7 +5,7 @@ from speakers.server.model.result import (BaseResponse,
                                           RunnerState,
                                           TaskRunnerResponse)
 from speakers.server.bootstrap.bootstrap_register import get_bootstrap
-from speakers.common.utils import get_abs_path
+from speakers.common.utils import get_tmp_path
 from fastapi import File, Form, Body, Query
 from fastapi.responses import FileResponse
 from speakers.common.registry import registry
@@ -55,7 +55,7 @@ async def submit_async(payload: PayLoad):
     payload.requested_at = now
 
     task_state = {}
-    if os.path.exists(get_abs_path(f'result/{task_id}.wav')):
+    if os.path.exists(get_tmp_path(f'result/{task_id}.wav')):
         task_state = {
             'task_id': task_id,
             'info': 'saved',
@@ -69,7 +69,7 @@ async def submit_async(payload: PayLoad):
             runner_bootstrap_web.task_states[task_id] = task_state
 
     elif task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
-        os.makedirs(get_abs_path('result'), exist_ok=True)
+        os.makedirs(get_tmp_path('result'), exist_ok=True)
         task_state = {
             'task_id': task_id,
             'info': 'pending',
@@ -138,7 +138,7 @@ async def post_task_update_async(runner_state: RunnerState):
 
 
 async def result_async(task_id: str = Query(..., examples=["task_id"])):
-    filepath = get_abs_path(f'result/{task_id}.wav')
+    filepath = get_tmp_path(f'result/{task_id}.wav')
     logger.info(f'Task  {task_id} result_async {filepath}')
     if os.path.exists(filepath):
         return FileResponse(

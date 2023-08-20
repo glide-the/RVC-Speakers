@@ -3,6 +3,9 @@ from speakers.speakers import set_main_logger, Speaker, WebSpeaker
 import torch
 import os
 import util
+from pathlib import Path
+import platform
+import tempfile
 
 __all__=[
     "Speaker",
@@ -12,6 +15,9 @@ __all__=[
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 registry.register_path("library_root", root_dir)
+
+tempdir = Path("/tmp" if platform.system() == "Darwin" else tempfile.gettempdir())
+registry.register_path("tmp_root", tempdir)
 
 
 device = (
