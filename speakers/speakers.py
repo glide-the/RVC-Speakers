@@ -178,7 +178,7 @@ class WebSpeaker(Speaker):
         try:
             task_results = {}
             for key, remote_info in self.remote_infos.items():  # 使用 .items() 方法获取键值对
-
+                logger.info("task-internal Heartbeat")
                 response = requests.get(
                     f'http://{remote_info["host"]}:{remote_info["port"]}/runner/task-internal?nonce={self.nonce}',
                     timeout=3600)
