@@ -135,8 +135,10 @@ class RVCSpeakers(BaseProcessor):
     def _load_hubert(self, hubert_model_path: str):
 
         # Load hubert model
+        logger.info(f'Load hubert model{hubert_model_path}')
         self.hubert_model = util.load_hubert_model(registry.get("device"), model_path=hubert_model_path)
         self.hubert_model.eval()
+        logger.info('Loaded hubert model')
 
     def _load_rvc_mode(self, rvc_config_file: str):
         """
@@ -146,6 +148,7 @@ class RVCSpeakers(BaseProcessor):
         """
 
         # Load models
+        logger.info(f'Models Load:rvc_speakers')
         multi_cfg = OmegaConf.load(get_abs_path(rvc_config_file))
         rmvpe_path = os.path.join(registry.get_path("rvc_library_root"), multi_cfg.get("rmvpe_path"))
         logger.info(f'rmvpe_path:{rmvpe_path}')
