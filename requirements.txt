@@ -9,6 +9,7 @@ jieba
 cn2an
 # vits_text
 
+nest_asyncio
 gradio==3.33.1
 fairseq
 torch
