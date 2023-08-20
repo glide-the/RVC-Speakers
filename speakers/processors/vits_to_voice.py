@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger('speaker_runner')
 
 
-def set_rvc_speakers_logger(l):
+def set_vits_to_voice_logger(l):
     global logger
     logger = l
 
