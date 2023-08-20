@@ -185,8 +185,6 @@ class WebSpeaker(Speaker):
                 # 检查响应状态码
                 if response.status_code == 200:
                     task_results[key] = response.json().get("data")
-                else:
-                    raise RuntimeError
             return task_results
         except Exception:
             traceback.print_exc()
