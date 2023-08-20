@@ -4,13 +4,6 @@
  SPDX-License-Identifier: BSD-3-Clause
  For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
-import logging
-logger = logging.getLogger('registry_manager')
-
-
-def set_registry_manager_logger(l):
-    global logger
-    logger = l
 
 
 class Registry:
@@ -36,7 +29,8 @@ class Registry:
             from lavis.common.registry import registry
         """
 
-        logger.info(f"from speakers.common.registry import registry {name}")
+        print(f"from speakers.common.registry import registry {name}")
+
         def wrap(task_cls):
             from speakers.tasks.base_task import BaseTask
             assert issubclass(
@@ -64,7 +58,8 @@ class Registry:
 
             from speakers.common.registry import registry
         """
-        logger.info(f"from speakers.common.registry import registry {name}")
+        print(f"from speakers.common.registry import registry {name}")
+
         def wrap(processor_cls):
             from speakers.processors import BaseProcessor
 
@@ -121,7 +116,7 @@ class Registry:
             current = current[part]
 
         current[path[-1]] = obj
-        logger.info(f" Key with which the item will be registered {current}")
+        print(f" Key with which the item will be registered {current}")
 
     @classmethod
     def get_processor_class(cls, name):
