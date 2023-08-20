@@ -17,7 +17,7 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 registry.register_path("library_root", root_dir)
 
 tempdir = Path("/tmp" if platform.system() == "Darwin" else tempfile.gettempdir())
-registry.register_path("tmp_root", tempdir)
+registry.register_path("tmp_root", str(tempdir))
 
 
 device = (
