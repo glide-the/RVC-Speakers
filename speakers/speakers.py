@@ -118,8 +118,12 @@ class WebSpeaker(Speaker):
                         if self._task_results.get(_key) is None or self._task_results.get(_key).get("task_id") is None:
                             continue
                         if task_id in self._task_results.get(_key).get("task_id"):
+                            host = '127.0.0.1'
+                            if not '0.0.0.0' in _remote_info.get("host"):
+                                host = _remote_info.get("host")
+
                             requests.post(
-                                f'http://{_remote_info.get("host")}:{_remote_info.get("port")}/runner/task-update-internal',
+                                f'http://{host}:{_remote_info.get("port")}/runner/task-update-internal',
                                 json=data, timeout=20)
                             break
                     break
@@ -177,10 +181,14 @@ class WebSpeaker(Speaker):
     def _get_task(self):
         try:
             task_results = {}
-            for key, remote_info in self.remote_infos.items():  # 使用 .items() 方法获取键值对
-                logger.info("task-internal Heartbeat")
+            for key, _remote_info in self.remote_infos.items():  # 使用 .items() 方法获取键值对
+
+                host = '127.0.0.1'
+                if not '0.0.0.0' in _remote_info.get("host"):
+                    host = _remote_info.get("host")
+
                 response = requests.get(
-                    f'http://{remote_info["host"]}:{remote_info["port"]}/runner/task-internal?nonce={self.nonce}',
+                    f'http://{host}:{_remote_info["port"]}/runner/task-internal?nonce={self.nonce}',
                     timeout=3600)
                 # 检查响应状态码
                 if response.status_code == 200:
