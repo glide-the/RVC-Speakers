@@ -11,6 +11,14 @@ from fastapi.responses import FileResponse
 from speakers.common.registry import registry
 import os
 import time
+import logging
+
+logger = logging.getLogger('server_runner')
+
+
+def set_server_runner_logger(l):
+    global logger
+    logger = l
 
 
 def constant_compare(a, b):
@@ -47,7 +55,6 @@ async def submit_async(payload: PayLoad):
     payload.requested_at = now
 
     task_state = {}
-    print(f'New `submit` task {task_id}')
     if os.path.exists(get_abs_path(f'result/{task_id}.wav')):
         task_state = {
             'task_id': task_id,
@@ -55,8 +62,12 @@ async def submit_async(payload: PayLoad):
             'finished': True,
         }
         if task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
-            runner_bootstrap_web.task_states[task_id] = task_state
+
+            logger.info(f'New `submit` task {task_id}')
             runner_bootstrap_web.task_data[task_id] = payload
+            runner_bootstrap_web.queue.append(task_id)
+            runner_bootstrap_web.task_states[task_id] = task_state
+
     elif task_id not in runner_bootstrap_web.task_data or task_id not in runner_bootstrap_web.task_states:
         os.makedirs(get_abs_path('result'), exist_ok=True)
         task_state = {
@@ -65,6 +76,7 @@ async def submit_async(payload: PayLoad):
             'finished': False,
         }
 
+        logger.info(f'New `submit` task {task_id}')
         runner_bootstrap_web.task_data[task_id] = payload
         runner_bootstrap_web.queue.append(task_id)
 
@@ -120,13 +132,14 @@ async def post_task_update_async(runner_state: RunnerState):
                 except ValueError:
                     pass
 
-            print(f'Task state {task_id} to {runner_bootstrap_web.task_states[task_id]}')
+            logger.info(f'Task state {task_id} to {runner_bootstrap_web.task_states[task_id]}')
 
     return BaseResponse(code=200, msg="成功")
 
 
 async def result_async(task_id: str = Query(..., examples=["task_id"])):
     filepath = get_abs_path(f'result/{task_id}.wav')
+    logger.info(f'Task  {task_id} result_async {filepath}')
     if os.path.exists(filepath):
         return FileResponse(
             path=filepath,
