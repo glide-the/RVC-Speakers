@@ -12,7 +12,7 @@ COPY . /code/
 RUN pip install -e .
 
 RUN cd /code/vits/monotonic_align && \
-    mkdir -p code/vits/monotonic_align/vits/monotonic_align/ && \
+    mkdir -p /code/vits/monotonic_align/vits/monotonic_align/ && \
     python setup.py build_ext --inplace && \
     mv /code/vits/monotonic_align/vits/monotonic_align/* /code/vits/monotonic_align/
 
