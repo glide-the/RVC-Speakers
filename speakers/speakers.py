@@ -141,6 +141,10 @@ class WebSpeaker(Speaker):
             if not self._task_results:
                 wait_flag = True
 
+            if wait_flag:
+                await asyncio.sleep(1)
+                continue
+
             # 处理每个runner的调度,如果有任何一个返回了任务，则执行调度
             for key, remote_info in self.remote_infos.items():
                 if self._task_results.get(key) is None or self._task_results.get(key).get("task_id") is None:

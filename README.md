@@ -57,3 +57,12 @@ python -m speakers --verbose --mode web
 ```shell
 python start.py--verbose --mode web
 ```
+
+
+### 常见问题
+
+Q:启动出现`_pickle.UnpicklingError: invalid load key, 'v'.`
+
+```shell
+$ git lfs pull 
+```
