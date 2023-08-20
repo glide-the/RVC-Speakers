@@ -7,9 +7,14 @@ import torch
 import os
 from speakers.common.registry import registry
 from speakers.processors import BaseProcessor, ProcessorData
-from speakers.common.utils import get_abs_path
-from omegaconf import OmegaConf
-from pydantic import Field
+import logging
+
+logger = logging.getLogger('speaker_runner')
+
+
+def set_rvc_speakers_logger(l):
+    global logger
+    logger = l
 
 
 def get_text(text, hps):
@@ -57,6 +62,7 @@ class VitsToVoice(BaseProcessor):
         import nest_asyncio
         nest_asyncio.apply()
         self.limitation = os.getenv("SYSTEM") == "spaces"  # limit text and audio length in huggingface spaces
+        logger.info(f'limit text and audio length in huggingface spaces: {self.limitation}')
         self._load_voice_mode(vits_model=vits_model_path, voice_config_file=voice_config_file)
 
         self._language_marks = {
@@ -111,6 +117,7 @@ class VitsToVoice(BaseProcessor):
 
     def _load_voice_mode(self, vits_model: str, voice_config_file: str):
 
+        logger.info(f'_load_voice_mode: {voice_config_file}')
         device = torch.device(registry.get("device"))
         self.hps_ms = utils.get_hparams_from_file(voice_config_file)
         self.net_g_ms = SynthesizerTrn(
@@ -124,7 +131,7 @@ class VitsToVoice(BaseProcessor):
         self._speakers = self.hps_ms.speakers
         self.model, self.optimizer, self.learning_rate, self.epochs = utils.load_checkpoint(vits_model, self.net_g_ms,
                                                                                             None)
-        print(f'Models loaded')
+        logger.info(f'Models loaded vits_to_voice')
 
     def search_speaker(self, search_value):
         """

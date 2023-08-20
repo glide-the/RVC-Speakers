@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import torch
+import logging
 from rvc.infer_pack.models import (
     SynthesizerTrnMs768NSFsid,
     SynthesizerTrnMs768NSFsid_nono
@@ -17,6 +18,13 @@ from speakers.common.utils import get_abs_path
 from omegaconf import OmegaConf
 from speakers.common.registry import registry
 from pydantic import Field
+
+logger = logging.getLogger('speaker_runner')
+
+
+def set_rvc_speakers_logger(l):
+    global logger
+    logger = l
 
 
 class RvcProcessorData(ProcessorData):
@@ -140,18 +148,18 @@ class RVCSpeakers(BaseProcessor):
         # Load models
         multi_cfg = OmegaConf.load(get_abs_path(rvc_config_file))
         rmvpe_path = os.path.join(registry.get_path("rvc_library_root"), multi_cfg.get("rmvpe_path"))
-        print(rmvpe_path)
+        logger.info(f'rmvpe_path:{rmvpe_path}')
         for item in multi_cfg.get('models'):
             for key, model_info in item.items():  # 使用 .items() 方法获取键值对
 
-                print(f'Loading model: {key}')
+                logger.info(f'Loading model: {key}')
                 model_name = model_info.get("model_name")
                 # Load model info
                 model_info_config_file = os.path.join(registry.get_path("rvc_library_root"),
                                                       model_info.get("path"),
                                                       'config.json')
 
-                print(f'Loading model model_info_config_file: {model_info_config_file}')
+                logger.info(f'Loading model model_info_config_file: {model_info_config_file}')
                 model_info_config = json.load(open(model_info_config_file, 'r'))
 
                 # Load RVC checkpoint
@@ -178,7 +186,7 @@ class RVCSpeakers(BaseProcessor):
                 del net_g.enc_q
 
                 # According to original code, this thing seems necessary.
-                print(net_g.load_state_dict(cpt['weight'], strict=False))
+                logger.info(net_g.load_state_dict(cpt['weight'], strict=False))
 
                 net_g.eval().to(registry.get("device"))
                 net_g = net_g.half() if util.is_half(registry.get("device")) else net_g.float()
@@ -202,7 +210,7 @@ class RVCSpeakers(BaseProcessor):
                     target_sr=tgt_sr
                 ))
 
-        print(f'Models loaded: {len(self._loaded_models)}')
+        logger.info(f'Models loaded:rvc_speakers, len:{len(self._loaded_models)}')
 
     def vc_func(
             self,
@@ -256,7 +264,6 @@ class RVCSpeakers(BaseProcessor):
             )
 
         f0_up_key = int(f0_up_key)
-        print(f0_up_key)
         times = [0, 0, 0]
 
         checksum = hashlib.sha512()
@@ -297,5 +304,5 @@ class RVCSpeakers(BaseProcessor):
             else model['target_sr']
         )
 
-        print(f'npy: {times[0]}s, f0: {times[1]}s, infer: {times[2]}s')
+        logger.info(f'npy: {times[0]}s, f0: {times[1]}s, infer: {times[2]}s')
         return out_sr, output_audio
