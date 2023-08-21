@@ -61,4 +61,4 @@ class RunnerParameter(BaseModel):
 
 class PayLoad(BaseFlowData):
     parameter: RunnerParameter
-    payload: VoiceFlowData
+    payload: Dict

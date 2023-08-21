@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server Documentation</title>
+    <style>
+        /* CSS for the progress bar */
+        #loading {
+            width: 0;
+            height: 20px;
+            background-color: #4CAF50;
+            transition: width 0.5s;
+        }
+        .container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 80%; 
+            gap: 20px;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-content: stretch;
+        }
+        .container > div {
+            flex-basis: 45%; /* 设置子元素占比，以确保在大屏幕上有足够的间距 */
+        }
+        .container > div:last-child {
+            flex-basis: 100%; /* 最后一个子元素占满整行 */
+        }
+        .container > div span {
+            display: inline-block;
+            min-width: 150px; /* 设置最小宽度以对齐标签 */
+        }
+        .container input, .container select {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- VitsProcessorData Parameters -->
+
+        <div>
+            <div>VitsProcessorData Parameters</div>
+            <div>
+                <span>生成文本 (text):</span>
+                <input id="text" type="text" value="你好"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>语言 (language):</span>
+                <select id="language">
+                    <option value="0">日本語</option>
+                    <option value="1" selected>简体中文</option> <!-- 默认选择中文 -->
+                    <option value="2">English</option>
+                    <option value="3">Mix</option>
+                </select>
+            </div>
+            <div>
+                <span>讲话人ID (speaker_id):</span>
+                <input id="speaker_id" type="text" value="486"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>noise_scale (控制感情变化程度):</span>
+                <input id="noise_scale" type="text" value="0.5" placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>speed (控制整体语速):</span>
+                <input id="speed" type="text" value="1"   placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>noise_scale_w (控制音素发音长度):</span>
+                <input id="noise_scale_w" type="text" value="1"  placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
+            </div>
+        </div>
+
+        <!-- RvcProcessorData Parameters -->
+
+        <div>
+            <div>RvcProcessorData Parameters </div>
+
+            <div>
+                <span>变调 (f0_up_key):</span>
+                <input id="f0_up_key" type="text" value="-4"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>F0曲线文件 (f0_file, 可选):</span>
+                <input id="f0_file" type="text" value=""> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>保护清辅音和呼吸声，防止电音撕裂等artifact，拉满0.5不开启，调低加大保护力度但可能降低索引效果 (protect):</span>
+                <input id="protect" type="text" value="0.33"  placeholder="0.0-0.5"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>模型索引 (model_index):</span>
+                <input id="model_index" type="text" value="0"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>F0方法 (f0_method):</span>
+                <input id="f0_method" type="text" value="rmvpe"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>检索特征占比 (index_rate):</span>
+                <input id="index_rate" type="text" value="0.9"  placeholder="0.0-1"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>滤波半径 (filter_radius):</span>
+                <input id="filter_radius" type="text" value="1"   placeholder="1-9"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>输入源音量包络替换输出音量包络融合比例，越靠近1越使用输出包络 (rms_mix_rate):</span>
+                <input id="rms_mix_rate" type="text" value="1" placeholder="0.0-1"> <!-- 默认值填入输入框 -->
+            </div>
+            <div>
+                <span>后处理重采样至最终采样率，0为不进行重采样 (resample_sr):</span>
+                <input id="resample_sr" type="text" value="0"> <!-- 默认值填入输入框 -->
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <button id="submit">提交</button>
+    </div>
+
+    <a href="/docs">查看文档</a>
+    <div id="loading"></div>
+    <div id="audio-player" style="display:none;">
+        <h2>音频播放器</h2>
+        <audio controls id="audio-element">
+            <!-- 音频内容将在此处显示 -->
+        </audio>
+    </div>
+
+    <script>
+        let continueSubmitting = true; // Flag to control whether to continue submitting tasks
+ 
+
+        // Function to submit the runner and wait for it to finish
+        async function submitRunnerAndWait() {
+            // Retrieve parameter values from the input fields
+            const text = document.getElementById('text').value;
+            const language = document.getElementById('language').value;
+            const speaker_id = document.getElementById('speaker_id').value;
+            const noise_scale = document.getElementById('noise_scale').value;
+            const speed = document.getElementById('speed').value;
+            const noise_scale_w = document.getElementById('noise_scale_w').value;
+            const f0_up_key = document.getElementById('f0_up_key').value;
+            const f0_file = document.getElementById('f0_file').value;
+            const protect = document.getElementById('protect').value;
+            const model_index = document.getElementById('model_index').value;
+            const f0_method = document.getElementById('f0_method').value;
+            const index_rate = document.getElementById('index_rate').value;
+            const filter_radius = document.getElementById('filter_radius').value;
+            const rms_mix_rate = document.getElementById('rms_mix_rate').value;
+            const resample_sr = document.getElementById('resample_sr').value;
+
+            // Define the request body for the POST request
+            const requestBody = {
+                "created_at": 0,
+                "requested_at": 0,
+                "parameter": {
+                    "task_name": "voice_task"
+                },
+                "payload": {
+                    "vits": {
+                        "text": text,
+                        "language": parseInt(language),
+                        "speaker_id": parseInt(speaker_id),
+                        "noise_scale": parseFloat(noise_scale),
+                        "speed": parseFloat(speed),
+                        "noise_scale_w": parseFloat(noise_scale_w)
+                    },
+                    "rvc": {
+                        "model_index": parseInt(model_index),
+                        "f0_up_key": parseInt(f0_up_key),
+                        "f0_method": f0_method,
+                        "index_rate": parseFloat(index_rate),
+                        "filter_radius": parseInt(filter_radius),
+                        "rms_mix_rate": parseFloat(rms_mix_rate),
+                        "resample_sr": parseFloat(resample_sr),
+                        "protect": parseFloat(protect),
+                        "f0_file": f0_file
+                    }
+                }
+            };
+            // Function to submit the runner and handle the result
+            async function submitRunner() {
+                if (!continueSubmitting) {
+                    return; // Stop submitting if the flag is set to false
+                }
+
+                const submitResponse = await fetch('/runner/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const submitData = await submitResponse.json();
+
+                if (submitData.code === 200 && submitData.data.finished === true) {
+                    // Task is already finished, get the result
+                    getResultAndDisplayAudio(submitData.data.task_id);
+                } else {
+                    // Task is not finished, continue submitting
+                    setTimeout(submitRunner, 5000); // Submit every 5 seconds (adjust as needed)
+                    
+                    // Update the progress bar
+                    const loadingDiv = document.getElementById('loading');
+                    loadingDiv.style.width = '50%'; // Update the width accordingly
+                }
+            }
+
+            // Start submitting the runner
+            submitRunner();
+        }
+
+        // Function to get the result and display audio
+        async function getResultAndDisplayAudio(taskId) {
+            continueSubmitting = false; // Stop further submissions
+            const resultResponse = await fetch(`/runner/result?task_id=${taskId}`);
+            const resultBlob = await resultResponse.blob();
+
+            // Create a URL for the audio file
+            const audioUrl = URL.createObjectURL(resultBlob);
+
+            // Display the audio player
+            const audioElement = document.getElementById('audio-element');
+            audioElement.src = audioUrl;
+            document.getElementById('audio-player').style.display = 'block';
+
+            // Hide the progress bar
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'none';
+        }
+
+        // Attach a click event listener to the submit button
+        document.getElementById('submit').addEventListener('click', function() {
+            const text = document.getElementById('text').value;
+            continueSubmitting = true; // Reset the flag
+            submitRunnerAndWait(text); // Start the submission process with the entered text
+            
+            // Display the progress bar
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>

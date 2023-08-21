@@ -7,6 +7,7 @@ from speakers.server.model.flow_data import PayLoad
 
 import logging
 
+
 class FlowData(Serializable):
     """
     当前runner的任务参数
@@ -16,6 +17,7 @@ class FlowData(Serializable):
     @abstractmethod
     def type(self) -> str:
         """Type of the Message, used for serialization."""
+
     @property
     def lc_serializable(self) -> bool:
         """Whether this class is Processor serializable."""

@@ -62,9 +62,9 @@ class RvcProcessorData(ProcessorData):
     """ >=3则使用对harvest音高识别的结果使用中值滤波，数值为滤波半径，使用可以削弱哑音"""
     filter_radius: int
     """输入源音量包络替换输出音量包络融合比例，越靠近1越使用输出包络"""
-    rms_mix_rate: int
+    rms_mix_rate: float
     """后处理重采样至最终采样率，0为不进行重采样"""
-    resample_sr: float
+    resample_sr: int
     """保护清辅音和呼吸声，防止电音撕裂等artifact，拉满0.5不开启，调低加大保护力度但可能降低索引效果"""
     protect: float = Field(
         default=0.33

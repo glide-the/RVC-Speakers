@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from starlette.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from speakers.server.utils import MakeFastAPIOffline
 from speakers.server.model.result import BaseResponse
-from speakers.server.servlet.document import document
+from speakers.server.servlet.document import page_index, document
 from speakers.server.servlet.runner import (submit_async,
                                             get_task_async,
                                             post_task_update_async,
@@ -51,6 +52,9 @@ class RunnerBootstrapBaseWeb(Bootstrap):
         )
 
         self.app.get("/",
+                     response_model=BaseResponse,
+                     summary="演示首页")(page_index)
+        self.app.get("/docs",
                      response_model=BaseResponse,
                      summary="swagger 文档")(document)
         self.app.post("/runner/submit",
