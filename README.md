@@ -4,8 +4,9 @@
 Ready Voice Controller系统采用了端到端的多引擎合成器，配备多种预处理器processors和音频处理流程audio pipeline，
 可支持微调音素、语调、音色、情感等要素，控制语音生成效果。
 
-### 设计图
-![](server.jpg)
+### 演示地址
+https://huggingface.co/spaces/dmeck/RVC-Speakers
+
 
 ### 运行
 #### 环境
