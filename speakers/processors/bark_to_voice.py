@@ -54,7 +54,6 @@ class BarkProcessorData(ProcessorData):
         return "VITS"
 
 
-@registry.register_processor("vits_to_voice")
 class VitsToVoice(BaseProcessor):
 
     def __init__(self, vits_model_path: str, voice_config_file: str):
