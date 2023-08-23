@@ -50,13 +50,13 @@ class BaseFlowData(BaseModel):
     requested_at: float
 
 
-class VoiceFlowData(BaseModel):
+class VitsVoiceFlowData(BaseModel):
     vits: VitsProcessorData
     rvc: RvcProcessorData
 
 
 class RunnerParameter(BaseModel):
-    task_name: str = Field(default="voice_task")
+    task_name: str = Field(default="vits_voice_task")
 
 
 class PayLoad(BaseFlowData):

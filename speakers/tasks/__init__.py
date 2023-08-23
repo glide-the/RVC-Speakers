@@ -3,7 +3,8 @@ from typing import List
 
 from speakers.common.registry import registry
 from speakers.tasks.base_task import BaseTask, Runner, FlowData
-from speakers.tasks.vits_voice_task import VoiceTask, VoiceFlowData
+from speakers.tasks.vits_voice_task import VitsVoiceTask, VitsVoiceFlowData
+from speakers.tasks.bark_voice_task import BarkVoiceTask, BarkVoiceFlowData
 
 __all__ = [
     "BaseTask",
@@ -11,7 +12,8 @@ __all__ = [
     "FlowData",
     "load_task",
     "get_task",
-    "VoiceFlowData",
+    "VitsVoiceFlowData",
+    "BarkVoiceFlowData",
     "tasks_cache"
 ]
 

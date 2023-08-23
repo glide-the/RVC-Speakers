@@ -21,12 +21,21 @@ preprocess:
 
 
 tasks:
-  - voice_task:
-      name: "voice_task"
+  - vits_voice_task:
+      name: "vits_voice_task"
       preprocess:
         - vits:
             processor: "vits_processor"
             processor_name: "VITS"
+        - rvc:
+            processor: "rvc_processor"
+            processor_name: "RVC"
+  - bark_voice_task:
+      name: "bark_voice_task"
+      preprocess:
+        - bark:
+            processor: "bark_processor"
+            processor_name: "BARK"
         - rvc:
             processor: "rvc_processor"
             processor_name: "RVC"

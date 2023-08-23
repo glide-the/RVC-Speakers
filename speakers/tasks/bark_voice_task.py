@@ -1,5 +1,5 @@
 from typing import Dict
-from speakers.processors import ProcessorData, BaseProcessor, get_processors, VitsProcessorData, RvcProcessorData
+from speakers.processors import ProcessorData, BaseProcessor, get_processors, BarkProcessorData, RvcProcessorData
 from speakers.tasks import BaseTask, Runner, FlowData
 from speakers.common.registry import registry
 from speakers.server.model.flow_data import PayLoad
@@ -7,14 +7,14 @@ import traceback
 import hashlib
 
 
-class VitsVoiceFlowData(FlowData):
-    vits: VitsProcessorData
+class BarkVoiceFlowData(FlowData):
+    bark: BarkProcessorData
     rvc: RvcProcessorData
 
     @property
     def type(self) -> str:
         """Type of the FlowData Message, used for serialization."""
-        return "vits_voice"
+        return "bark_voice"
 
 
 def calculate_md5(input_string):
@@ -23,8 +23,8 @@ def calculate_md5(input_string):
     return md5_hash.hexdigest()
 
 
-@registry.register_task("vits_voice_task")
-class VitsVoiceTask(BaseTask):
+@registry.register_task("bark_voice_task")
+class BarkVoiceTask(BaseTask):
     SAMPLE_RATE: int = 22050
 
     def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
@@ -52,32 +52,20 @@ class VitsVoiceTask(BaseTask):
         """
         params = payload.payload
         # 获取payload中的vits和rvc的值
-        vits_data = params.get("vits", {})
+        bark_data = params.get("bark", {})
         rvc_data = params.get("rvc", {})
 
-        # noise_scale_w: noise_scale_w(控制音素发音长度)
-        noise_scale_w = vits_data.get("noise_scale_w")
-        # noise_scale(控制感情变化程度)
-        noise_scale = vits_data.get("noise_scale")
-        # length_scale(控制整体语速)
-        speed = vits_data.get("speed")
-        # 语言
-        language = vits_data.get("language")
-        # vits 讲话人
-        speaker_id = vits_data.get("speaker_id")
-        text = vits_data.get("text")
+        speaker_history_prompt = bark_data.get("speaker_history_prompt")
+        text_temp = bark_data.get("text_temp")
+        waveform_temp = bark_data.get("waveform_temp")
+        text = bark_data.get("text")
 
-        # 创建一个 VitsProcessorData 实例
-        vits_processor_data = VitsProcessorData(
-            text=text,
-            language=language,
-            speaker_id=speaker_id,
-            noise_scale=noise_scale,
-            speed=speed,
-            noise_scale_w=noise_scale_w
-        )
+        # 创建一个 BarkProcessorData 实例
+        bark_processor_data = BarkProcessorData(text=text,
+                                                speaker_history_prompt=speaker_history_prompt,
+                                                text_temp=text_temp,
+                                                waveform_temp=waveform_temp)
         # 获取rvc中的值
-
         model_index = rvc_data.get("model_index")
 
         # 变调(整数, 半音数量, 升八度12降八度-12)
@@ -108,11 +96,11 @@ class VitsVoiceTask(BaseTask):
             protect=rvc_protect
         )
 
-        # 创建一个 VoiceFlowData 实例，并将 VitsProcessorData 实例作为参数传递
-        voice_flow_data = VoiceFlowData(vits=vits_processor_data,
-                                        rvc=rvc_processor_data)
+        # 创建一个 BarkVoiceFlowData 实例，并将 VitsProcessorData 实例作为参数传递
+        voice_flow_data = BarkVoiceFlowData(bark=bark_processor_data,
+                                            rvc=rvc_processor_data)
 
-        # 创建 Runner 实例并传递上面创建的 VoiceFlowData 实例作为参数
+        # 创建 Runner 实例并传递上面创建的 BarkVoiceFlowData 实例作为参数
         task_id = f'{calculate_md5(text)}-{speaker_id}-{language}' \
                   f'-{noise_scale}-{speed}-{noise_scale_w}' \
                   f'-{model_index}-{f0_up_key}'
@@ -130,14 +118,14 @@ class VitsVoiceTask(BaseTask):
             self.logger.info('dispatch')
 
             # 开启任务1
-            await self.report_progress(task_id=runner.task_id, runner_stat='vits_voice_task', state='dispatch_vits_voice_task')
+            await self.report_progress(task_id=runner.task_id, runner_stat='bark_voice_task', state='dispatch_bark_voice_task')
             data = runner.flow_data
-            if 'vits_voice' in data.type:
-                if 'VITS' in data.vits.type:
-                    vits_preprocess_object = self.preprocess_dict.get(data.vits.type)
-                    if not vits_preprocess_object.match(data.vits):
+            if 'bark_voice' in data.type:
+                if 'BARK' in data.bark.type:
+                    bark_preprocess_object = self.preprocess_dict.get(data.bark.type)
+                    if not bark_preprocess_object.match(data.bark):
                         raise RuntimeError('不支持的process')
-                    audio_np = vits_preprocess_object(data.vits)
+                    audio_np = bark_preprocess_object(data.bark)
                     if audio_np is not None and 'RVC' in data.rvc.type:
                         # 将 NumPy 数组转换为 Python 列表
                         audio_samples_list = audio_np.tolist()
@@ -151,7 +139,7 @@ class VitsVoiceTask(BaseTask):
 
                         # 完成任务，构建响应数据
                         await self.report_progress(task_id=runner.task_id,
-                                                   runner_stat='vits_voice_task',
+                                                   runner_stat='bark_voice_task',
                                                    state='finished',
                                                    finished=True)
 
@@ -160,7 +148,7 @@ class VitsVoiceTask(BaseTask):
                         return out_sr, output_audio
 
         except Exception as e:
-            await self.report_progress(task_id=runner.task_id, runner_stat='vits_voice_task',
+            await self.report_progress(task_id=runner.task_id, runner_stat='bark_voice_task',
                                        state='error', finished=True)
 
             self.logger.error(f'{e.__class__.__name__}: {e}',
