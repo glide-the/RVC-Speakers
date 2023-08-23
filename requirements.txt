@@ -31,6 +31,12 @@ IPython
 tqdm
 pandas
 
+## bark
+transformers
+encodec
+huggingface-hub>=0.14.1
+funcy
+
 # config manage
 omegaconf
 pydantic
