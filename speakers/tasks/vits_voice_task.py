@@ -108,11 +108,11 @@ class VitsVoiceTask(BaseTask):
             protect=rvc_protect
         )
 
-        # 创建一个 VoiceFlowData 实例，并将 VitsProcessorData 实例作为参数传递
-        voice_flow_data = VoiceFlowData(vits=vits_processor_data,
+        # 创建一个 VitsVoiceFlowData 实例，并将 VitsProcessorData 实例作为参数传递
+        voice_flow_data = VitsVoiceFlowData(vits=vits_processor_data,
                                         rvc=rvc_processor_data)
 
-        # 创建 Runner 实例并传递上面创建的 VoiceFlowData 实例作为参数
+        # 创建 Runner 实例并传递上面创建的 VitsVoiceFlowData 实例作为参数
         task_id = f'{calculate_md5(text)}-{speaker_id}-{language}' \
                   f'-{noise_scale}-{speed}-{noise_scale_w}' \
                   f'-{model_index}-{f0_up_key}'

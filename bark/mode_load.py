@@ -16,8 +16,12 @@ import contextlib
 import funcy
 import tqdm
 import numpy as np
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger('model_load')
+logger = logging.getLogger('bark_model_load')
+
+
+def set_bark_model_load_logger(l):
+    global logger
+    logger = l
 
 
 

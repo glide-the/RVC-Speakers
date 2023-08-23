@@ -39,39 +39,54 @@
 </head>
 <body>
     <div class="container">
-        <!-- VitsProcessorData Parameters -->
+        <!-- BarkProcessorData Parameters -->
 
         <div>
-            <div>VitsProcessorData Parameters</div>
+            <div>BarkProcessorData Parameters</div>
             <div>
                 <span>生成文本 (text):</span>
-                <input id="text" type="text" value="你好"> <!-- 默认值填入输入框 -->
+                <input id="text" type="text" value="青春的时间转瞬即逝，秋水于海又岂有一只浮游"> <!-- 默认值填入输入框 -->
+            </div>
+
+            <div>
+                <span>音频预设npz文件 (speaker_history_prompt):</span>
+                <input id="speaker_history_prompt" type="text" value="zh_speaker_2"> <!-- 默认值填入输入框 -->
             </div>
             <div>
-                <span>语言 (language):</span>
-                <select id="language">
-                    <option value="0">日本語</option>
-                    <option value="1" selected>简体中文</option> <!-- 默认选择中文 -->
-                    <option value="2">English</option>
-                    <option value="3">Mix</option>
-                </select>
+                <span>text_temp (提示特殊标记程序，趋近于1，提示词特殊标记越明显):</span>
+                <input id="text_temp" type="text" value="1" placeholder="0.0-1"> <!-- 默认值填入输入框 -->
             </div>
+
             <div>
-                <span>讲话人ID (speaker_id):</span>
-                <input id="speaker_id" type="text" value="486"> <!-- 默认值填入输入框 -->
+                <span>waveform_temp (提示隐藏空间转音频参数比例):</span>
+                <input id="waveform_temp" type="text" value="0.9" placeholder="0.0-1"> <!-- 默认值填入输入框 -->
             </div>
-            <div>
-                <span>noise_scale (控制感情变化程度):</span>
-                <input id="noise_scale" type="text" value="0.5" placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
-            </div>
-            <div>
-                <span>speed (控制整体语速):</span>
-                <input id="speed" type="text" value="1"   placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
-            </div>
-            <div>
-                <span>noise_scale_w (控制音素发音长度):</span>
-                <input id="noise_scale_w" type="text" value="1"  placeholder="0.0-2.0"> <!-- 默认值填入输入框 -->
-            </div>
+
+<!--            <div>-->
+<!--                <span>语言 (language):</span>-->
+<!--                <select id="language">-->
+<!--                    <option value="0">日本語</option>-->
+<!--                    <option value="1" selected>简体中文</option> &lt;!&ndash; 默认选择中文 &ndash;&gt;-->
+<!--                    <option value="2">English</option>-->
+<!--                    <option value="3">Mix</option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <span>讲话人ID (speaker_id):</span>-->
+<!--                <input id="speaker_id" type="text" value="486"> &lt;!&ndash; 默认值填入输入框 &ndash;&gt;-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <span>noise_scale (控制感情变化程度):</span>-->
+<!--                <input id="noise_scale" type="text" value="0.5" placeholder="0.0-2.0"> &lt;!&ndash; 默认值填入输入框 &ndash;&gt;-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <span>speed (控制整体语速):</span>-->
+<!--                <input id="speed" type="text" value="1"   placeholder="0.0-2.0"> &lt;!&ndash; 默认值填入输入框 &ndash;&gt;-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <span>noise_scale_w (控制音素发音长度):</span>-->
+<!--                <input id="noise_scale_w" type="text" value="1"  placeholder="0.0-2.0"> &lt;!&ndash; 默认值填入输入框 &ndash;&gt;-->
+<!--            </div>-->
         </div>
 
         <!-- RvcProcessorData Parameters -->
@@ -81,7 +96,7 @@
 
             <div>
                 <span>变调 (f0_up_key):</span>
-                <input id="f0_up_key" type="text" value="-4"> <!-- 默认值填入输入框 -->
+                <input id="f0_up_key" type="text" value="4"> <!-- 默认值填入输入框 -->
             </div>
             <div>
                 <span>F0曲线文件 (f0_file, 可选):</span>
@@ -140,11 +155,14 @@
         async function submitRunnerAndWait() {
             // Retrieve parameter values from the input fields
             const text = document.getElementById('text').value;
-            const language = document.getElementById('language').value;
-            const speaker_id = document.getElementById('speaker_id').value;
-            const noise_scale = document.getElementById('noise_scale').value;
-            const speed = document.getElementById('speed').value;
-            const noise_scale_w = document.getElementById('noise_scale_w').value;
+            // const language = document.getElementById('language').value;
+            // const speaker_id = document.getElementById('speaker_id').value;
+            // const noise_scale = document.getElementById('noise_scale').value;
+            // const speed = document.getElementById('speed').value;
+            // const noise_scale_w = document.getElementById('noise_scale_w').value;
+            const speaker_history_prompt = document.getElementById('speaker_history_prompt').value;
+            const text_temp = document.getElementById('text_temp').value;
+            const waveform_temp = document.getElementById('waveform_temp').value;
             const f0_up_key = document.getElementById('f0_up_key').value;
             const f0_file = document.getElementById('f0_file').value;
             const protect = document.getElementById('protect').value;
@@ -156,20 +174,46 @@
             const resample_sr = document.getElementById('resample_sr').value;
 
             // Define the request body for the POST request
+            // const requestBody = {
+            //     "created_at": 0,
+            //     "requested_at": 0,
+            //     "parameter": {
+            //         "task_name": "vits_voice_task"
+            //     },
+            //     "payload": {
+            //         "vits": {
+            //             "text": text,
+            //             "language": parseInt(language),
+            //             "speaker_id": parseInt(speaker_id),
+            //             "noise_scale": parseFloat(noise_scale),
+            //             "speed": parseFloat(speed),
+            //             "noise_scale_w": parseFloat(noise_scale_w)
+            //         },
+            //         "rvc": {
+            //             "model_index": parseInt(model_index),
+            //             "f0_up_key": parseInt(f0_up_key),
+            //             "f0_method": f0_method,
+            //             "index_rate": parseFloat(index_rate),
+            //             "filter_radius": parseInt(filter_radius),
+            //             "rms_mix_rate": parseFloat(rms_mix_rate),
+            //             "resample_sr": parseFloat(resample_sr),
+            //             "protect": parseFloat(protect),
+            //             "f0_file": f0_file
+            //         }
+            //     }
+            // };
             const requestBody = {
                 "created_at": 0,
                 "requested_at": 0,
                 "parameter": {
-                    "task_name": "voice_task"
+                    "task_name": "bark_voice_task"
                 },
                 "payload": {
-                    "vits": {
+                    "bark": {
                         "text": text,
-                        "language": parseInt(language),
-                        "speaker_id": parseInt(speaker_id),
-                        "noise_scale": parseFloat(noise_scale),
-                        "speed": parseFloat(speed),
-                        "noise_scale_w": parseFloat(noise_scale_w)
+                        "speaker_history_prompt": speaker_history_prompt,
+                        "text_temp": parseFloat(text_temp),
+                        "waveform_temp": parseFloat(waveform_temp),
                     },
                     "rvc": {
                         "model_index": parseInt(model_index),
@@ -184,6 +228,7 @@
                     }
                 }
             };
+
             // Function to submit the runner and handle the result
             async function submitRunner() {
                 if (!continueSubmitting) {

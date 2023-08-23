@@ -1,5 +1,23 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
+
+
+class BarkProcessorData(BaseModel):
+    """
+        :param text: 生成文本
+        :param speaker_history_prompt: 音频预设npz文件
+        :param text_temp: 提示特殊标记程序，趋近于1，提示词特殊标记越明显
+        :param waveform_temp: 提示隐藏空间转音频参数比例
+
+    """
+    """生成文本"""
+    text: str = Field(default="你好")
+    """音频预设npz文件"""
+    speaker_history_prompt: str = Field(default='zh_speaker_2')
+    """提示特殊标记程序，趋近于1，提示词特殊标记越明显"""
+    text_temp: float = Field(default=1)
+    """提示隐藏空间转音频参数比例"""
+    waveform_temp: float = Field(default=0.9)
 
 
 class VitsProcessorData(BaseModel):
@@ -59,6 +77,12 @@ class RunnerParameter(BaseModel):
     task_name: str = Field(default="vits_voice_task")
 
 
+class BarkVoiceFlowData(BaseModel):
+    bark: BarkProcessorData
+    rvc: RvcProcessorData
+
+
+
 class PayLoad(BaseFlowData):
     parameter: RunnerParameter
-    payload: Dict
+    payload: Union[Dict, BarkVoiceFlowData, VitsVoiceFlowData]

@@ -1,5 +1,5 @@
 from typing import Optional, Union, Dict
-from bark.mode_load import BarkModelLoader
+from bark.mode_load import BarkModelLoader, SAMPLE_RATE
 from vits.modules import commons
 from vits.text import text_to_sequence
 from torch import LongTensor
@@ -8,12 +8,18 @@ from speakers.processors import BaseProcessor, ProcessorData
 import os
 import logging
 import numpy as np
+import nltk  # we'll use this to split into sentences
+from nltk.tokenize import RegexpTokenizer
 
 logger = logging.getLogger('bark_to_voice')
+
 
 def set_bark_to_voice_logger(l):
     global logger
     logger = l
+
+
+silence = np.zeros(int(0.25 * SAMPLE_RATE))  # quarter second of silence
 
 
 def get_text(text, hps):
@@ -61,11 +67,25 @@ class BarkToVoice(BaseProcessor):
             self,
             data: BarkProcessorData
     ):
-        return self._generate_audio(text=data.text,
-                                    history_prompt_dir=registry.get_path('bark_library_root'),
-                                    history_prompt=data.speaker_history_prompt,
-                                    text_temp=data.text_temp,
-                                    waveform_temp=data.waveform_temp)
+        # 分词，适配长句子
+        script = data.text.replace("\n", "。").strip()
+        tokenizer = RegexpTokenizer(r'[^，。！？]+[，。！？]?')
+        sentences = tokenizer.tokenize(script)
+
+        pieces = []
+        logger.info(f"sentences:{sentences}")
+        for sentence in sentences:
+            audio_array = self._generate_audio(text=sentence,
+                                               history_prompt_dir=registry.get_path('bark_library_root'),
+                                               history_prompt=data.speaker_history_prompt,
+                                               text_temp=data.text_temp,
+                                               waveform_temp=data.waveform_temp)
+
+            pieces += [audio_array, silence.copy()]
+
+        audio_array_out = np.concatenate(pieces)
+        del pieces
+        return audio_array_out
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -151,7 +171,7 @@ class BarkToVoice(BaseProcessor):
             self,
             text: str,
             history_prompt: Optional[str] = None,
-            history_prompt_dir = None,
+            history_prompt_dir=None,
             temp: float = 0.7,
             silent: bool = False,
     ):

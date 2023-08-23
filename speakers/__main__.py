@@ -2,6 +2,8 @@ import os
 import asyncio
 import logging
 from argparse import Namespace
+
+from bark.mode_load import set_bark_model_load_logger
 from speakers.common.log import get_logger, set_log_level
 from speakers import set_main_logger, Speaker, WebSpeaker
 from speakers.processors.bark_to_voice import set_bark_to_voice_logger
@@ -57,6 +59,7 @@ def main():
         set_log_level(level=logging.DEBUG if args.verbose else logging.INFO)
         set_start_logger(get_logger(args.mode))
         set_main_logger(logger)
+        set_bark_model_load_logger(logger)
         set_rvc_speakers_logger(logger)
         set_vits_to_voice_logger(logger)
         set_bark_to_voice_logger(logger)

@@ -101,8 +101,8 @@ class BarkVoiceTask(BaseTask):
                                             rvc=rvc_processor_data)
 
         # 创建 Runner 实例并传递上面创建的 BarkVoiceFlowData 实例作为参数
-        task_id = f'{calculate_md5(text)}-{speaker_id}-{language}' \
-                  f'-{noise_scale}-{speed}-{noise_scale_w}' \
+        task_id = f'{calculate_md5(text)}-{speaker_history_prompt}-{text_temp}' \
+                  f'-{waveform_temp}' \
                   f'-{model_index}-{f0_up_key}'
         runner = Runner(
             task_id=task_id,
@@ -118,7 +118,9 @@ class BarkVoiceTask(BaseTask):
             self.logger.info('dispatch')
 
             # 开启任务1
-            await self.report_progress(task_id=runner.task_id, runner_stat='bark_voice_task', state='dispatch_bark_voice_task')
+            await self.report_progress(task_id=runner.task_id,
+                                       runner_stat='bark_voice_task',
+                                       state='dispatch_bark_voice_task')
             data = runner.flow_data
             if 'bark_voice' in data.type:
                 if 'BARK' in data.bark.type:
