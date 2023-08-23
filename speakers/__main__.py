@@ -4,13 +4,14 @@ import logging
 from argparse import Namespace
 from speakers.common.log import get_logger, set_log_level
 from speakers import set_main_logger, Speaker, WebSpeaker
+from speakers.processors.bark_to_voice import set_bark_to_voice_logger
 from speakers.processors.rvc_speakers_processor import set_rvc_speakers_logger
 from speakers.processors.vits_to_voice import set_vits_to_voice_logger
+from speakers.server.servlet.runner import set_server_runner_logger
 from speakers.server.model.flow_data import PayLoad
 from speakers.server import dispatch as dispatch_web
 import argparse
 
-from speakers.server.servlet.runner import set_server_runner_logger
 
 logger = logging.getLogger('start_logger')
 
@@ -58,6 +59,7 @@ def main():
         set_main_logger(logger)
         set_rvc_speakers_logger(logger)
         set_vits_to_voice_logger(logger)
+        set_bark_to_voice_logger(logger)
         set_server_runner_logger(logger)
 
         loop = asyncio.new_event_loop()

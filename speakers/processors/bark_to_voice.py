@@ -1,126 +1,224 @@
-# from vits import utils
-# from vits.modules import commons
-# from vits.models import SynthesizerTrn
-# from vits.text import text_to_sequence
-# from torch import no_grad, LongTensor
-# import torch
-# import os
-# from speakers.common.registry import registry
-# from speakers.processors import BaseProcessor, ProcessorData
-# import logging
-#
-# logger = logging.getLogger('speaker_runner')
-#
-#
-# def set_vits_to_voice_logger(l):
-#     global logger
-#     logger = l
-#
-#
-# def get_text(text, hps):
-#     text_norm, clean_text = text_to_sequence(text, hps.symbols, hps.data.text_cleaners)
-#     if hps.data.add_blank:
-#         text_norm = commons.intersperse(text_norm, 0)
-#     text_norm = LongTensor(text_norm)
-#     return text_norm, clean_text
-#
-#
-# class BarkProcessorData(ProcessorData):
-#     """
-#         :param text: 生成文本
-#         :param speaker_history_prompt: 音频预设npz文件
-#         :param text_temp: 提示特殊标记程序，趋近于1，提示词特殊标记越明显
-#         :param waveform_temp: 提示隐藏空间转音频参数比例
-#
-#     """
-#     """生成文本"""
-#     text: str
-#     """音频预设npz文件"""
-#     speaker_history_prompt: str
-#     """提示特殊标记程序，趋近于1，提示词特殊标记越明显"""
-#     text_temp: str
-#     """提示隐藏空间转音频参数比例"""
-#     waveform_temp: float
-#
-#     @property
-#     def type(self) -> str:
-#         """Type of the Message, used for serialization."""
-#         return "BARK"
-#
-#
-# class BarkToVoice(BaseProcessor):
-#
-#     model_conv: dict = {
-#         "text"
-#     }
-#
-#     def __init__(self, vits_model_path: str, voice_config_file: str):
-#         super().__init__()
-#         self._load_voice_mode(vits_model=vits_model_path, voice_config_file=voice_config_file)
-#
-#
-#     def __call__(
-#             self,
-#             data: BarkProcessorData
-#     ):
-#
-#     @classmethod
-#     def from_config(cls, cfg=None):
-#         if cfg is None:
-#             raise RuntimeError("from_config cfg is None.")
-#
-#         vits_model_path = cfg.get("vits_model_path", "")
-#         voice_config_file = cfg.get("voice_config_file", "")
-#
-#         return cls(vits_model_path=os.path.join(registry.get_path("vits_library_root"),
-#                                                 vits_model_path),
-#                    voice_config_file=os.path.join(registry.get_path("vits_library_root"),
-#                                                   voice_config_file))
-#
-#     def match(self, data: ProcessorData):
-#         return "VITS" in data.type
-#
-#
-#     def _load__mode(self, vits_model: str, voice_config_file: str):
-#
-#         logger.info(f'_load_voice_mode: {voice_config_file}')
-#
-#         logger.info(f'Models loaded vits_to_voice')
-#
-#     def search_speaker(self, search_value):
-#         """
-#         检索讲话人
-#         :return:
-#         """
-#         for s in self._speakers:
-#             if search_value == s or search_value in s:
-#                 return s
-#
-#     def vits_func(
-#             self,
-#             text: str, language: int, speaker_id: int,
-#             noise_scale: float = 1, noise_scale_w: float = 1, speed=1):
-#         """
-#
-#         :param text: 生成文本
-#         :param language: 默认自动判断语言- 0中文， 1 日文
-#         :param speaker_id: 讲话人id
-#         :param noise_scale: noise_scale(控制感情变化程度)
-#         :param speed: length_scale(控制整体语速)
-#         :param noise_scale_w: noise_scale_w(控制音素发音长度)
-#         :return:
-#         """
-#         if language is not None:
-#             text = self._language_marks[self._lang[language]] + text + self._language_marks[self._lang[language]]
-#
-#         stn_tst, clean_text = get_text(text, self.hps_ms)
-#         with no_grad():
-#             x_tst = stn_tst.unsqueeze(0).to(registry.get("device"))
-#             x_tst_lengths = LongTensor([stn_tst.size(0)]).to(registry.get("device"))
-#             sid = LongTensor([speaker_id]).to(registry.get("device"))
-#             audio = self.model.infer(x_tst, x_tst_lengths, sid=sid,
-#                                      noise_scale=noise_scale,
-#                                      noise_scale_w=noise_scale_w,
-#                                      length_scale=1.0 / speed)[0][0, 0].data.cpu().float().numpy()
-#         del stn_tst, x_tst, x_tst_lengths, sid
-#         return audio
+from typing import Optional, Union, Dict
+from bark.mode_load import BarkModelLoader
+from vits.modules import commons
+from vits.text import text_to_sequence
+from torch import LongTensor
+from speakers.common.registry import registry
+from speakers.processors import BaseProcessor, ProcessorData
+import os
+import logging
+import numpy as np
+
+logger = logging.getLogger('bark_to_voice')
+
+def set_bark_to_voice_logger(l):
+    global logger
+    logger = l
+
+
+def get_text(text, hps):
+    text_norm, clean_text = text_to_sequence(text, hps.symbols, hps.data.text_cleaners)
+    if hps.data.add_blank:
+        text_norm = commons.intersperse(text_norm, 0)
+    text_norm = LongTensor(text_norm)
+    return text_norm, clean_text
+
+
+class BarkProcessorData(ProcessorData):
+    """
+        :param text: 生成文本
+        :param speaker_history_prompt: 音频预设npz文件
+        :param text_temp: 提示特殊标记程序，趋近于1，提示词特殊标记越明显
+        :param waveform_temp: 提示隐藏空间转音频参数比例
+
+    """
+    """生成文本"""
+    text: str
+    """音频预设npz文件"""
+    speaker_history_prompt: str
+    """提示特殊标记程序，趋近于1，提示词特殊标记越明显"""
+    text_temp: float
+    """提示隐藏空间转音频参数比例"""
+    waveform_temp: float
+
+    @property
+    def type(self) -> str:
+        """Type of the Message, used for serialization."""
+        return "BARK"
+
+
+@registry.register_processor("bark_to_voice")
+class BarkToVoice(BaseProcessor):
+
+    def __init__(self, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
+        super().__init__()
+        self._load_bark_mode(tokenizer_path=tokenizer_path,
+                             text_path=text_path,
+                             coarse_path=coarse_path,
+                             fine_path=fine_path)
+
+    def __call__(
+            self,
+            data: BarkProcessorData
+    ):
+        return self._generate_audio(text=data.text,
+                                    history_prompt_dir=registry.get_path('bark_library_root'),
+                                    history_prompt=data.speaker_history_prompt,
+                                    text_temp=data.text_temp,
+                                    waveform_temp=data.waveform_temp)
+
+    @classmethod
+    def from_config(cls, cfg=None):
+        if cfg is None:
+            raise RuntimeError("from_config cfg is None.")
+
+        tokenizer_path = cfg.get("tokenizer_path", "")
+        text_model_path = cfg.get("text_model_path", "")
+        coarse_model_path = cfg.get("coarse_model_path", "")
+        fine_model_path = cfg.get("fine_model_path", "")
+
+        return cls(tokenizer_path=os.path.join(registry.get_path("vits_library_root"),
+                                               tokenizer_path),
+                   text_path=os.path.join(registry.get_path("vits_library_root"),
+                                          text_model_path),
+                   coarse_path=os.path.join(registry.get_path("vits_library_root"),
+                                            coarse_model_path),
+                   fine_path=os.path.join(registry.get_path("vits_library_root"),
+                                          fine_model_path)
+                   )
+
+    def match(self, data: ProcessorData):
+        return "BARK" in data.type
+
+    def _load_bark_mode(self, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
+
+        logger.info(f'Bark model loading')
+        self.bark_load = BarkModelLoader(tokenizer_path=tokenizer_path,
+                                         text_path=text_path,
+                                         coarse_path=coarse_path,
+                                         fine_path=fine_path,
+                                         device=registry.get("device"))
+        logger.info(f'Models loaded bark')
+
+    def _generate_audio(
+            self,
+            text: str,
+            history_prompt: Optional[str] = None,
+            history_prompt_dir: str = None,
+            text_temp: float = 0.7,
+            waveform_temp: float = 0.7,
+            fine_temp: float = 0.5,
+            silent: bool = False,
+            output_full: bool = False):
+        """Generate audio array from input text.
+
+        Args:
+            text: text to be turned into audio
+            history_prompt: history choice for audio cloning
+            text_temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            waveform_temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            fine_temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            silent: disable progress bar
+            output_full: return full generation to be used as a history prompt
+
+        Returns:
+            numpy audio array at sample frequency 24khz
+        """
+        semantic_tokens = self._text_to_semantic(
+            text,
+            history_prompt=history_prompt,
+            history_prompt_dir=history_prompt_dir,
+            temp=text_temp,
+            silent=silent,
+        )
+        out = self._semantic_to_waveform(
+            semantic_tokens,
+            history_prompt=history_prompt,
+            history_prompt_dir=history_prompt_dir,
+            temp=waveform_temp,
+            fine_temp=fine_temp,
+            silent=silent,
+            output_full=output_full,
+        )
+        if output_full:
+            full_generation, audio_arr = out
+            return full_generation, audio_arr
+        else:
+            audio_arr = out
+        return audio_arr
+
+    def _text_to_semantic(
+            self,
+            text: str,
+            history_prompt: Optional[str] = None,
+            history_prompt_dir = None,
+            temp: float = 0.7,
+            silent: bool = False,
+    ):
+        """Generate semantic array from text.
+
+        Args:
+            text: text to be turned into audio
+            history_prompt: history choice for audio cloning
+            temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            silent: disable progress bar
+
+        Returns:
+            numpy semantic array to be fed into `semantic_to_waveform`
+        """
+        x_semantic = self.bark_load.generate_text_semantic(
+            text,
+            history_prompt=history_prompt,
+            history_prompt_dir=history_prompt_dir,
+            temp=temp,
+            silent=silent,
+            use_kv_caching=True
+        )
+        return x_semantic
+
+    def _semantic_to_waveform(
+            self,
+            semantic_tokens: np.ndarray,
+            history_prompt: Optional[Union[Dict, str]] = None,
+            history_prompt_dir: str = None,
+            temp: float = 0.7,
+            fine_temp: float = 0.5,
+            silent: bool = False,
+            output_full: bool = False,
+    ):
+        """Generate audio array from semantic input.
+
+        Args:
+            semantic_tokens: semantic token output from `text_to_semantic`
+            history_prompt: history choice for audio cloning
+            fine_temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            temp: generation temperature (1.0 more diverse, 0.0 more conservative)
+            silent: disable progress bar
+            output_full: return full generation to be used as a history prompt
+
+        Returns:
+            numpy audio array at sample frequency 24khz
+        """
+        coarse_tokens = self.bark_load.generate_coarse(
+            semantic_tokens,
+            history_prompt=history_prompt,
+            history_prompt_dir=history_prompt_dir,
+            temp=temp,
+            silent=silent,
+            use_kv_caching=True
+        )
+        fine_tokens = self.bark_load.generate_fine(
+            coarse_tokens,
+            history_prompt=history_prompt,
+            history_prompt_dir=history_prompt_dir,
+            temp=fine_temp,
+        )
+        audio_arr = self.bark_load.codec_decode(fine_tokens)
+        if output_full:
+            full_generation = {
+                "semantic_prompt": semantic_tokens,
+                "coarse_prompt": coarse_tokens,
+                "fine_prompt": fine_tokens,
+            }
+            return full_generation, audio_arr
+        return audio_arr

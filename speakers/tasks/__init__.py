@@ -3,7 +3,7 @@ from typing import List
 
 from speakers.common.registry import registry
 from speakers.tasks.base_task import BaseTask, Runner, FlowData
-from speakers.tasks.voice_task import VoiceTask, VoiceFlowData
+from speakers.tasks.vits_voice_task import VoiceTask, VoiceFlowData
 
 __all__ = [
     "BaseTask",
