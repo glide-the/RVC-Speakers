@@ -9,6 +9,7 @@ WORKDIR /code
 ENV NUMBA_CACHE_DIR=/tmp/
 RUN mkdir /tmp/cache
 ENV TRANSFORMERS_CACHE=/tmp/cache/
+ENV XDG_CACHE_HOME=/tmp/cache/
 
 COPY ./requirements.txt /code/requirements.txt
 
