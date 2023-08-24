@@ -63,9 +63,9 @@ class RvcProcessorData(BaseModel):
 
 class BaseFlowData(BaseModel):
     """任务创建时间"""
-    created_at: float
+    created_at: float = Field(default=0)
     """任务请求时间"""
-    requested_at: float
+    requested_at: float = Field(default=0)
 
 
 class VitsVoiceFlowData(BaseModel):

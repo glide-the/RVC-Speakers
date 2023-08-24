@@ -14,7 +14,7 @@ preprocess:
         rvc_config_file: "rvc.yaml"
     - bark_processor:
         name: "bark_to_voice"
-        codec_repository_path: "/media/gpt4-pdf-chatbot-langchain/RVC-Speakers/bark/model"
+        codec_repository_path: "model/codec"
         tokenizer_path: "/media/checkpoint/bark/bert-base-multilingual-cased"
         text_model_path: "/media/checkpoint/bark/suno/bark_v0/text_2.pt"
         coarse_model_path: "/media/checkpoint/bark/suno/bark_v0/coarse_2.pt"

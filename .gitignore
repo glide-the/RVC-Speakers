@@ -20,3 +20,4 @@ vits/monotonic_align/core.cpython-310-x86_64-linux-gnu.so
 test.wav
 speakers/result
 speakers.egg-info
+bark/model/codec/encodec_24khz-d7cc33bc.th

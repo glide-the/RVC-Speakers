@@ -10,6 +10,8 @@ from speakers.server.servlet.runner import (submit_async,
                                             result_async)
 from speakers.server.bootstrap.bootstrap_register import bootstrap_register
 from speakers.server.bootstrap.base import Bootstrap
+from speakers.common.registry import registry
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import threading
 
@@ -40,6 +42,9 @@ class RunnerBootstrapBaseWeb(Bootstrap):
             version=self.version
         )
         MakeFastAPIOffline(self.app)
+        self.app.mount("/static",
+                       StaticFiles(directory=f"{registry.get_path('server_library_root')}/static/static"),
+                       name="static")
         # Add CORS middleware to allow all origins
         # 在config.py中设置OPEN_DOMAIN=True，允许跨域
         # set OPEN_DOMAIN=True in config.py to allow cross-domain
