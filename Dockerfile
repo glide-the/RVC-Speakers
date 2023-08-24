@@ -2,8 +2,14 @@ FROM python:3.10
 
 RUN apt update && apt install -y cmake gcc portaudio19-dev
 
+
+
 WORKDIR /code
+
 ENV NUMBA_CACHE_DIR=/tmp/
+RUN mkdir /tmp/cache
+ENV TRANSFORMERS_CACHE=/tmp/cache/
+
 COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
