@@ -97,13 +97,13 @@ class BarkToVoice(BaseProcessor):
         coarse_model_path = cfg.get("coarse_model_path", "")
         fine_model_path = cfg.get("fine_model_path", "")
 
-        return cls(tokenizer_path=os.path.join(registry.get_path("vits_library_root"),
+        return cls(tokenizer_path=os.path.join(registry.get_path("bark_library_root"),
                                                tokenizer_path),
-                   text_path=os.path.join(registry.get_path("vits_library_root"),
+                   text_path=os.path.join(registry.get_path("bark_library_root"),
                                           text_model_path),
-                   coarse_path=os.path.join(registry.get_path("vits_library_root"),
+                   coarse_path=os.path.join(registry.get_path("bark_library_root"),
                                             coarse_model_path),
-                   fine_path=os.path.join(registry.get_path("vits_library_root"),
+                   fine_path=os.path.join(registry.get_path("bark_library_root"),
                                           fine_model_path)
                    )
 
