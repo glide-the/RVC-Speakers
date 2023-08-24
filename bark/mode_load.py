@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from bark.model_fine import FineGPT, FineGPTConfig
 from bark.model import GPT, GPTConfig
 from huggingface_hub import hf_hub_download
@@ -139,8 +141,8 @@ def _download(self, from_hf_path, file_name, local_dir):
     hf_hub_download(repo_id=from_hf_path, filename=file_name, local_dir=local_dir)
 
 
-def _load_codec_model(device):
-    model = EncodecModel.encodec_model_24khz()
+def _load_codec_model(device,codec_repository_path: str):
+    model = EncodecModel.encodec_model_24khz(pretrained=True, repository=Path(codec_repository_path))
     model.set_target_bandwidth(6.0)
     model.eval()
     model.to(device)
@@ -214,13 +216,17 @@ class BarkModelLoader:
     _tokenizer_path: str = "bert-base-multilingual-cased"
     _encodec: EncodecModel
 
-    def __init__(self, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str, device: str):
+    def __init__(self, codec_repository_path: str, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str, device: str):
 
         if tokenizer_path:
             self._tokenizer_path = tokenizer_path
         logger.info(f"BertTokenizer load.")
         self._tokenizer = BertTokenizer.from_pretrained(self._tokenizer_path)
         logger.info(f"BertTokenizer loaded")
+
+        logger.info(f"_encodec load.")
+        self._encodec = _load_codec_model(device=device, codec_repository_path=codec_repository_path)
+        logger.info(f"_encodec loaded")
 
         self._text_model.model_path = text_path
         self._coarse_model.model_path = coarse_path
@@ -286,7 +292,6 @@ class BarkModelLoader:
             self._coarse_model.model = model
         elif model_type.model_type == "fine_model":
             self._fine_model.model = model
-        self._encodec = _load_codec_model(device)
 
     def generate_text_semantic(
             self,

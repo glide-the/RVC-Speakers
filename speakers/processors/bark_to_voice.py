@@ -56,9 +56,10 @@ class BarkProcessorData(ProcessorData):
 @registry.register_processor("bark_to_voice")
 class BarkToVoice(BaseProcessor):
 
-    def __init__(self, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
+    def __init__(self,codec_repository_path: str, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
         super().__init__()
-        self._load_bark_mode(tokenizer_path=tokenizer_path,
+        self._load_bark_mode(codec_repository_path=codec_repository_path,
+                             tokenizer_path=tokenizer_path,
                              text_path=text_path,
                              coarse_path=coarse_path,
                              fine_path=fine_path)
@@ -92,12 +93,15 @@ class BarkToVoice(BaseProcessor):
         if cfg is None:
             raise RuntimeError("from_config cfg is None.")
 
+        codec_repository_path = cfg.get("codec_repository_path", "")
         tokenizer_path = cfg.get("tokenizer_path", "")
         text_model_path = cfg.get("text_model_path", "")
         coarse_model_path = cfg.get("coarse_model_path", "")
         fine_model_path = cfg.get("fine_model_path", "")
 
-        return cls(tokenizer_path=os.path.join(registry.get_path("bark_library_root"),
+        return cls(codec_repository_path=os.path.join(registry.get_path("bark_library_root"),
+                                                     codec_repository_path),
+                   tokenizer_path=os.path.join(registry.get_path("bark_library_root"),
                                                tokenizer_path),
                    text_path=os.path.join(registry.get_path("bark_library_root"),
                                           text_model_path),
@@ -110,10 +114,11 @@ class BarkToVoice(BaseProcessor):
     def match(self, data: ProcessorData):
         return "BARK" in data.type
 
-    def _load_bark_mode(self, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
+    def _load_bark_mode(self, codec_repository_path: str, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
 
         logger.info(f'Bark model loading')
-        self.bark_load = BarkModelLoader(tokenizer_path=tokenizer_path,
+        self.bark_load = BarkModelLoader(codec_repository_path=codec_repository_path,
+                                         tokenizer_path=tokenizer_path,
                                          text_path=text_path,
                                          coarse_path=coarse_path,
                                          fine_path=fine_path,
