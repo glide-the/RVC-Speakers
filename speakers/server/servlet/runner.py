@@ -138,12 +138,19 @@ async def post_task_update_async(runner_state: RunnerState):
 
 
 async def result_async(task_id: str = Query(..., examples=["task_id"])):
-    filepath = get_tmp_path(f'result/{task_id}.wav')
-    logger.info(f'Task  {task_id} result_async {filepath}')
-    if os.path.exists(filepath):
-        return FileResponse(
-            path=filepath,
-            filename=f"{task_id}.wav",
-            media_type="multipart/form-data")
-    else:
+    try:
+
+        filepath = get_tmp_path(f'result/{task_id}.wav')
+        logger.info(f'Task  {task_id} result_async {filepath}')
+        if os.path.exists(filepath):
+            return FileResponse(
+                path=filepath,
+                filename=f"{task_id}.wav",
+                media_type="multipart/form-data")
+        else:
+            return BaseResponse(code=500, msg=f"{task_id}.wav 读取文件失败")
+
+    except Exception as e:
+        logger.error(f'{e.__class__.__name__}: {e}',
+                     exc_info=e)
         return BaseResponse(code=500, msg=f"{task_id}.wav 读取文件失败")

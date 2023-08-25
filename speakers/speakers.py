@@ -59,16 +59,25 @@ class Speaker:
 
     async def preparation_runner(self, task_id: str, payload: PayLoad = None):
         voice_task = get_task(payload.parameter.task_name)
-        runner = voice_task.prepare(payload=payload)
+        try:
 
-        out_sr, output = await voice_task.dispatch(runner=runner)
-        if output is not None:
-            # 当前生命周期 saved
-            # save audio to disk
-            write_wav(self._result_path(f"{task_id}.wav"), out_sr, output)
-            del output
-            await voice_task.report_progress(task_id=runner.task_id, runner_stat='voice_task', state='saved',
-                                             finished=True)
+            runner = voice_task.prepare(payload=payload)
+
+            out_sr, output = await voice_task.dispatch(runner=runner)
+            if output is not None:
+                # 当前生命周期 saved
+                # save audio to disk
+                write_wav(self._result_path(f"{task_id}.wav"), out_sr, output)
+                del output
+                await voice_task.report_progress(task_id=runner.task_id, runner_stat='preparation_runner',
+                                                 state='saved',
+                                                 finished=True)
+        except Exception as e:
+
+            logger.error(f'{e.__class__.__name__}: {e}',
+                         exc_info=e)
+            await voice_task.report_progress(task_id=task_id, runner_stat='preparation_runner',
+                                             state='error', finished=True)
 
     def _result_path(self, path: str) -> str:
         return get_tmp_path(f'result/{path}')
