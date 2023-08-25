@@ -56,7 +56,7 @@ python -m speakers --verbose --mode web
 ```
 2、直接启动
 ```shell
-python start.py--verbose --mode web
+python start.py --verbose --mode web
 ```
 
 
