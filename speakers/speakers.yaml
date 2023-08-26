@@ -34,12 +34,21 @@ tasks:
         - rvc:
             processor: "rvc_processor"
             processor_name: "RVC"
-  - bark_voice_task:
-      name: "bark_voice_task"
+#  - bark_voice_task:
+#      name: "bark_voice_task"
+#      preprocess:
+#        - bark:
+#            processor: "bark_processor"
+#            processor_name: "BARK"
+#        - rvc:
+#            processor: "rvc_processor"
+#            processor_name: "RVC"
+  - edge_voice_task:
+      name: "edge_voice_task"
       preprocess:
-        - bark:
-            processor: "bark_processor"
-            processor_name: "BARK"
+        - edge:
+            processor: "edge_processor"
+            processor_name: "EDGE"
         - rvc:
             processor: "rvc_processor"
             processor_name: "RVC"
