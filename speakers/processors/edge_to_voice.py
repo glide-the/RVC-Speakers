@@ -22,12 +22,18 @@ def set_edge_to_voice_logger(l):
 class EdgeProcessorData(ProcessorData):
     """
         :param text: 生成文本
+        :param tts_speaker: 讲话人id
+        :param rate: 语速
+        :param volume: 语气轻重
 
     """
     """生成文本"""
     text: str
+    """讲话人id"""
     tts_speaker: int
+    """语速"""
     rate: str
+    """语气轻重"""
     volume: str
 
 

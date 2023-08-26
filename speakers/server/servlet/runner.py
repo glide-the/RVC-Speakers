@@ -40,9 +40,7 @@ def constant_compare(a, b):
 async def submit_async(payload: PayLoad):
     """
         Adds new task to the queue
-        task_id = f'{calculate_md5(flowData.vits.text)}-{flowData.vits.speaker_id}-{flowData.vits.language}' \
-              f'-{flowData.vits.noise_scale}-{flowData.vits.speed}-{flowData.vits.noise_scale_w}' \
-              f'-{flowData.rvc.model_index}-{flowData.rvc.f0_up_key}'
+        @see task function prepare gen taskid
     """
 
     runner_bootstrap_web = get_bootstrap("runner_bootstrap_web")

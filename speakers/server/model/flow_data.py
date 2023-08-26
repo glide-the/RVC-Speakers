@@ -2,6 +2,24 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 
 
+class EdgeProcessorData(BaseModel):
+    """
+        :param text: 生成文本
+        :param tts_speaker: 讲话人id
+        :param rate: 语速
+        :param volume: 语气轻重
+
+    """
+    """生成文本"""
+    text: str
+    """讲话人id"""
+    tts_speaker: int
+    """语速"""
+    rate: str
+    """语气轻重"""
+    volume: str
+
+
 class BarkProcessorData(BaseModel):
     """
         :param text: 生成文本
@@ -82,7 +100,11 @@ class BarkVoiceFlowData(BaseModel):
     rvc: RvcProcessorData
 
 
+class EdgeVoiceFlowData(BaseModel):
+    edge: EdgeProcessorData
+    rvc: RvcProcessorData
+
 
 class PayLoad(BaseFlowData):
     parameter: RunnerParameter
-    payload: Union[Dict, BarkVoiceFlowData, VitsVoiceFlowData]
+    payload: Union[Dict, EdgeVoiceFlowData, BarkVoiceFlowData, VitsVoiceFlowData]
