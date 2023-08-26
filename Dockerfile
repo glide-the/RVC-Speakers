@@ -1,15 +1,15 @@
 FROM python:3.10
 
-RUN apt update && apt install -y cmake gcc portaudio19-dev
+RUN apt update && apt install -y cmake gcc portaudio19-dev ffmpeg
 
 
 
 WORKDIR /code
 
 ENV NUMBA_CACHE_DIR=/tmp/
-RUN mkdir /tmp/cache
-ENV TRANSFORMERS_CACHE=/tmp/cache/
-ENV XDG_CACHE_HOME=/tmp/cache/
+
+ENV TRANSFORMERS_CACHE=/tmp/
+ENV XDG_CACHE_HOME=/tmp/
 
 COPY ./requirements.txt /code/requirements.txt
 

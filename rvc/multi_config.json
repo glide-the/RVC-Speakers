@@ -1,9 +1,0 @@
-{
-    "models": [
-        "yiqing", "bob", "arianagrande", "syz", "lulu", "maomao"
-    ],
-    "examples": {
-        "vc": [],
-        "tts_vc": []
-    }
-}
