@@ -12,13 +12,16 @@ preprocess:
         name: "rvc_speakers"
         hubert_model_path: "model/hubert_base.pt"
         rvc_config_file: "rvc.yaml"
-    - bark_processor:
-        name: "bark_to_voice"
-        codec_repository_path: "model/codec"
-        tokenizer_path: "/media/checkpoint/bark/bert-base-multilingual-cased"
-        text_model_path: "/media/checkpoint/bark/suno/bark_v0/text_2.pt"
-        coarse_model_path: "/media/checkpoint/bark/suno/bark_v0/coarse_2.pt"
-        fine_model_path: "/media/checkpoint/bark/suno/bark_v0/fine_2.pt"
+#    - bark_processor:
+#        name: "bark_to_voice"
+#        codec_repository_path: "model/codec"
+#        tokenizer_path: "/media/checkpoint/bark/bert-base-multilingual-cased"
+#        text_model_path: "/media/checkpoint/bark/suno/bark_v0/text_2.pt"
+#        coarse_model_path: "/media/checkpoint/bark/suno/bark_v0/coarse_2.pt"
+#        fine_model_path: "/media/checkpoint/bark/suno/bark_v0/fine_2.pt"
+
+    - edge_processor:
+          name: "edge_to_voice"
 
 
 tasks:

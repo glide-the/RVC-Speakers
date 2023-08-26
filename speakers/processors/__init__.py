@@ -12,6 +12,7 @@ from speakers.processors.base_processor import ProcessorData
 from speakers.processors.rvc_speakers_processor import RvcProcessorData
 from speakers.processors.vits_to_voice import VitsProcessorData
 from speakers.processors.bark_to_voice import BarkProcessorData
+from speakers.processors.edge_to_voice import EdgeProcessorData
 
 __all__ = [
     "BaseProcessor",
@@ -19,6 +20,7 @@ __all__ = [
     "RvcProcessorData",
     "VitsProcessorData",
     "BarkProcessorData",
+    "EdgeProcessorData",
     "get_processors",
     "load_preprocess",
 ]
