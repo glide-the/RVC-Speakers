@@ -8,7 +8,9 @@ import torch
 import logging
 from rvc.infer_pack.models import (
     SynthesizerTrnMs768NSFsid,
-    SynthesizerTrnMs768NSFsid_nono
+    SynthesizerTrnMs768NSFsid_nono,
+    SynthesizerTrnMs256NSFsid,
+    SynthesizerTrnMs256NSFsid_nono
 )
 from os import getenv
 from typing import Union, Tuple, List
@@ -164,7 +166,11 @@ class RVCSpeakers(BaseProcessor):
 
                 logger.info(f'Loading model model_info_config_file: {model_info_config_file}')
                 model_info_config = json.load(open(model_info_config_file, 'r'))
-
+                # 索引文件路径
+                if model_info_config.get('feat_index') is not None and model_info_config.get('feat_index') != "":
+                    model_info_config['feat_index'] = os.path.join(registry.get_path("rvc_library_root"),
+                                                                   model_info.get("path"),
+                                                                   model_info_config['feat_index'])
                 # Load RVC checkpoint
                 torch_file = os.path.join(registry.get_path("rvc_library_root"),
                                           model_info.get("path"),
@@ -177,14 +183,19 @@ class RVCSpeakers(BaseProcessor):
                 cpt['config'][-3] = cpt['weight']['emb_g.weight'].shape[0]  # n_spk
 
                 if_f0 = cpt.get('f0', 1)
-                net_g: Union[SynthesizerTrnMs768NSFsid, SynthesizerTrnMs768NSFsid_nono]
-                if if_f0 == 1:
-                    net_g = SynthesizerTrnMs768NSFsid(
-                        *cpt['config'],
-                        is_half=util.is_half(registry.get("device"))
-                    )
-                else:
-                    net_g = SynthesizerTrnMs768NSFsid_nono(*cpt['config'])
+                version = cpt.get("version", "v1")
+
+                logger.info(f'Loading model: {key},if_f0:{if_f0},version:{version}')
+                synthesizer_class = {
+                    ("v1", 1): SynthesizerTrnMs256NSFsid,
+                    ("v1", 0): SynthesizerTrnMs256NSFsid_nono,
+                    ("v2", 1): SynthesizerTrnMs768NSFsid,
+                    ("v2", 0): SynthesizerTrnMs768NSFsid_nono,
+                }
+
+                net_g = synthesizer_class.get(
+                    (version, if_f0), SynthesizerTrnMs256NSFsid
+                )(*cpt["config"], is_half=util.is_half(registry.get("device")))
 
                 del net_g.enc_q
 
@@ -210,7 +221,8 @@ class RVCSpeakers(BaseProcessor):
                     vc=vc,
                     net_g=net_g,
                     if_f0=if_f0,
-                    target_sr=tgt_sr
+                    target_sr=tgt_sr,
+                    version=version
                 ))
 
         logger.info(f'Models loaded:rvc_speakers, len:{len(self._loaded_models)}')
@@ -297,7 +309,7 @@ class RVCSpeakers(BaseProcessor):
             model['target_sr'],
             resample_sr,
             rms_mix_rate,
-            'v2',
+            model['version'],
             protect,
             f0_file=f0_file
         )

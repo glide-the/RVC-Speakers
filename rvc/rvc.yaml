@@ -25,3 +25,6 @@ models:
     - maomao:
         model_name: "maomao"
         path: "model/maomao"
+    - otto:
+        model_name: "otto"
+        path: "model/otto"
