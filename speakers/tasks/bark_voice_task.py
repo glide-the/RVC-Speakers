@@ -101,7 +101,7 @@ class BarkVoiceTask(BaseTask):
                                             rvc=rvc_processor_data)
 
         # 创建 Runner 实例并传递上面创建的 BarkVoiceFlowData 实例作为参数
-        task_id = f'{calculate_md5(text)}-{speaker_history_prompt}-{text_temp}' \
+        task_id = f'{calculate_md5(text)}-{calculate_md5(speaker_history_prompt)}-{text_temp}' \
                   f'-{waveform_temp}' \
                   f'-{model_index}-{f0_up_key}'
         runner = Runner(

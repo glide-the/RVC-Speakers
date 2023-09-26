@@ -1,0 +1,11 @@
+{
+    "model": "otto.pth",
+    "feat_index": "added_IVF980_Flat_nprobe_1_otto_v1.index",
+    "speaker_id": 0,
+
+    "name": "otto",
+    "author": "otto",
+    "source": "ALL",
+    "note": "otto",
+    "icon": "cover.png"
+}

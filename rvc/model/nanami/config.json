@@ -1,0 +1,11 @@
+{
+    "model": "nanami_e500.pth",
+    "feat_index": "added_IVF3233_Flat_nprobe_1_nanami_v2.index",
+    "speaker_id": 0,
+
+    "name": "nanami",
+    "author": "nanami",
+    "source": "ALL",
+    "note": "nanami",
+    "icon": "cover.png"
+}

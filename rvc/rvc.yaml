@@ -25,6 +25,12 @@ models:
     - maomao:
         model_name: "maomao"
         path: "model/maomao"
+    - nahida:
+        model_name: "nahida"
+        path: "model/nahida"
+    - nanami:
+        model_name: "nanami"
+        path: "model/nanami"
     - otto:
         model_name: "otto"
         path: "model/otto"

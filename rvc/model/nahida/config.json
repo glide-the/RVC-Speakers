@@ -1,0 +1,11 @@
+{
+    "model": "Nahida.pth",
+    "feat_index": "added_IVF3460_Flat_nprobe_11.index",
+    "speaker_id": 0,
+
+    "name": "Nahida",
+    "author": "Nahida",
+    "source": "ALL",
+    "note": "Nahida",
+    "icon": "cover.png"
+}
