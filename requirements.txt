@@ -17,7 +17,7 @@ torchaudio==2.0.2
 soundfile==0.12.1
 scipy==1.9.3
 librosa==0.9.1
-musicdl=2.3.6
+musicdl==2.3.6
 pyaudio
 torchcrepe==0.0.20
 praat-parselmouth==0.4.3
