@@ -204,5 +204,5 @@ class WebSpeaker(Speaker):
                     task_results[key] = response.json().get("data")
             return task_results
         except Exception:
-            traceback.print_exc()
+            logger.error(f'runner_bootstrap_web connection error: {traceback.format_exc()}')
             return None

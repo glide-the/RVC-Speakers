@@ -10,6 +10,7 @@ import asyncio
 import nest_asyncio
 import util
 import librosa
+import traceback
 
 logger = logging.getLogger('edge_to_voice')
 
@@ -49,7 +50,12 @@ class EdgeToVoice(BaseProcessor):
     def __init__(self):
         super().__init__()
         nest_asyncio.apply()
-        self._tts_speakers_list = asyncio.get_event_loop().run_until_complete(edge_tts.list_voices())  # noqa
+        try:
+            logger.info('Loading voices speakers role from edge_tts...')
+            self._tts_speakers_list = asyncio.get_event_loop().run_until_complete(edge_tts.list_voices())  # noqa
+        except Exception as e:
+            logger.error(f'Error in loading voices from edge_tts:  {traceback.format_exc()}')
+            self._tts_speakers_list = []
 
     def __call__(
             self,
