@@ -18,7 +18,7 @@ pip install -r requirements.txt
 #### VITS
 - 代码来源 https://github.com/Plachtaa/VITS-fast-fine-tuning.git
 
-- 前置依赖
+- vits存在前置依赖，需要执行以下命令
 ```shell
 $ cd vits/monotonic_align
 $ mkdir -p vits/monotonic_align/
@@ -26,19 +26,36 @@ $ python setup.py build_ext --inplace
 $ mv vits/monotonic_align/* .
 
 ```
-- 模块
-``` 
-vits目录
-```
+- 模块所属vits目录
  
 #### RVC
 
 - 代码来源  https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI
 
-- 模块
+- 模块所属rvc目录
+
+- 模型配置下面两个模型需要下载到rvc/model目录下
 ``` 
-rvc目录
+
+[hubert_base.pt](rvc/model/hubert_base.pt)
+下载地址：https://huggingface.co/lj1995/VoiceConversionWebUI/blob/main/hubert_base.pt
+
+[rmvpe.pt](rvc/model/rmvpe.pt)
+如果你想使用最新的RMVPE人声音高提取算法，则你需要下载音高提取模型 
+下载地址：https://huggingface.co/lj1995/VoiceConversionWebUI/blob/main/rmvpe.pt
 ```
+#### bark
+
+- 代码来源  https://github.com/suno-ai/bark
+
+- 模块所属bark目录
+
+- 预设的prompt文件，需要放在下面的目录下
+``` 
+[prompts](bark/assets/prompts)
+下载地址：https://github.com/suno-ai/bark/tree/main/bark/assets/prompts
+```
+
 
 ### 如何运行
 
