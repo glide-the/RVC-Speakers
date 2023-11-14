@@ -21,3 +21,7 @@ test.wav
 speakers/result
 speakers.egg-info
 bark/model/codec/encodec_24khz-d7cc33bc.th
+bfg.jar
+bark/assets/prompts/*
+rvc/model/hubert_base.pt
+rvc/model/rmvpe.pt
