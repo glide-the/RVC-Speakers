@@ -2,13 +2,14 @@ import numpy as np
 from typing import List
 
 from speakers.common.registry import registry
-from speakers.tasks.base_task import BaseTask, Runner, FlowData
+from speakers.tasks.base_task import BaseTask, Runner, FlowData, AudioTaskAbstract
 from speakers.tasks.vits_voice_task import VitsVoiceTask, VitsVoiceFlowData
 from speakers.tasks.bark_voice_task import BarkVoiceTask, BarkVoiceFlowData
 from speakers.tasks.edge_voice_task import EdgeVoiceTask, EdgeVoiceFlowData
 
 __all__ = [
     "BaseTask",
+    "AudioTaskAbstract",
     "Runner",
     "FlowData",
     "load_task",

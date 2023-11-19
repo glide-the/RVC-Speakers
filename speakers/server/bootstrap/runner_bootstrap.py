@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from starlette.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from speakers.server.utils import MakeFastAPIOffline
@@ -7,13 +7,15 @@ from speakers.server.servlet.document import page_index, document
 from speakers.server.servlet.runner import (submit_async,
                                             get_task_async,
                                             post_task_update_async,
-                                            result_async)
+                                            result_async,
+                                            result_source_async)
 from speakers.server.bootstrap.bootstrap_register import bootstrap_register
 from speakers.server.bootstrap.base import Bootstrap
 from speakers.common.registry import registry
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import threading
+import logging
 
 
 @bootstrap_register.register_bootstrap("runner_bootstrap_web")
@@ -71,10 +73,30 @@ class RunnerBootstrapBaseWeb(Bootstrap):
         self.app.post("/runner/task-update-internal",
                       tags=["Runner"],
                       summary="内部同步调度RunnerStat")(post_task_update_async)
+        self.app.get("/runner/result_source",
+                     tags=["Runner"],
+                     summary="获取任务资源结果")(result_source_async)
         self.app.get("/runner/result",
                      tags=["Runner"],
                      summary="获取任务结果")(result_async)
         app = self.app
+
+        # 中间件函数，用于设置特定路径的日志级别
+        async def set_logging_level(request: Request, call_next):
+            # 获取请求路径
+            path = request.url.path
+
+            # 如果是指定路径，则设置日志级别为 WARNING
+            if path.startswith("/runner/task-internal"):
+                logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+            else:
+                # 其他路径则保持默认级别
+                logging.getLogger("uvicorn.access").setLevel(logging.INFO)
+
+            return await call_next(request)
+
+        # 将中间件添加到应用中
+        app.middleware("http")(set_logging_level)
 
         def run_server():
             uvicorn.run(app, host=self.host, port=self.port)

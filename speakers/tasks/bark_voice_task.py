@@ -1,6 +1,6 @@
 from typing import Dict
 from speakers.processors import ProcessorData, BaseProcessor, get_processors, BarkProcessorData, RvcProcessorData
-from speakers.tasks import BaseTask, Runner, FlowData
+from speakers.tasks import AudioTaskAbstract, Runner, FlowData
 from speakers.common.registry import registry
 from speakers.server.model.flow_data import PayLoad
 import traceback
@@ -24,7 +24,7 @@ def calculate_md5(input_string):
 
 
 @registry.register_task("bark_voice_task")
-class BarkVoiceTask(BaseTask):
+class BarkVoiceTask(AudioTaskAbstract):
     SAMPLE_RATE: int = 22050
 
     def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
@@ -137,7 +137,7 @@ class BarkVoiceTask(BaseTask):
                         if not rvc_preprocess_object.match(data.rvc):
                             raise RuntimeError('不支持的process')
 
-                        out_sr, output_audio = rvc_preprocess_object(data.rvc)
+                        write_data = rvc_preprocess_object(data.rvc)
 
                         # 完成任务，构建响应数据
                         await self.report_progress(task_id=runner.task_id,
@@ -146,8 +146,8 @@ class BarkVoiceTask(BaseTask):
                                                    finished=True)
 
                         del audio_np
+                        await super().save_task_write(runner=runner, write_data=write_data)
                         del runner
-                        return out_sr, output_audio
 
         except Exception as e:
             await self.report_progress(task_id=runner.task_id, runner_stat='bark_voice_task',

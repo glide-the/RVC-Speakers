@@ -45,3 +45,4 @@ class RunnerState(BaseModel):
     nonce: str
     state: str
     finished: bool = Field(default=False)
+    result: dict = Field(default={})

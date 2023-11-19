@@ -13,7 +13,7 @@ ENV XDG_CACHE_HOME=/tmp/
 
 COPY ./requirements.txt /code/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir --force-reinstall -r /code/requirements.txt
 COPY . /code/
 
 RUN pip install -e .

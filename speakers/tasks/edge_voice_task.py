@@ -1,6 +1,6 @@
 from typing import Dict
 from speakers.processors import  BaseProcessor, get_processors, EdgeProcessorData, RvcProcessorData
-from speakers.tasks import BaseTask, Runner, FlowData
+from speakers.tasks import AudioTaskAbstract, Runner, FlowData
 from speakers.common.registry import registry
 from speakers.server.model.flow_data import PayLoad
 import traceback
@@ -24,7 +24,7 @@ class EdgeVoiceFlowData(FlowData):
 
 
 @registry.register_task("edge_voice_task")
-class EdgeVoiceTask(BaseTask):
+class EdgeVoiceTask(AudioTaskAbstract):
 
     def __init__(self, preprocess_dict: Dict[str, BaseProcessor]):
         super().__init__(preprocess_dict=preprocess_dict)
@@ -137,18 +137,18 @@ class EdgeVoiceTask(BaseTask):
                         if not rvc_preprocess_object.match(data.rvc):
                             raise RuntimeError('不支持的process')
 
-                        out_sr, output_audio = rvc_preprocess_object(data.rvc)
+                        write_data = rvc_preprocess_object(data.rvc)
 
                         # 完成任务，构建响应数据
                         await self.report_progress(task_id=runner.task_id,
                                                    runner_stat='edge_voice_task',
                                                    state='finished',
-                                                   finished=True)
+                                                   finished=False)
 
                         del tts_np
                         del tts_sr
+                        await super().save_task_write(runner=runner, write_data=write_data)
                         del runner
-                        return out_sr, output_audio
 
         except Exception as e:
             await self.report_progress(task_id=runner.task_id, runner_stat='edge_voice_task',

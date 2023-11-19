@@ -5,7 +5,6 @@ import traceback
 
 import requests
 from omegaconf import OmegaConf
-from scipy.io.wavfile import write as write_wav
 
 from speakers.common.log import add_file_logger, remove_file_logger
 from speakers.common.registry import registry
@@ -63,24 +62,17 @@ class Speaker:
 
             runner = voice_task.prepare(payload=payload)
 
-            out_sr, output = await voice_task.dispatch(runner=runner)
-            if output is not None:
-                # 当前生命周期 saved
-                # save audio to disk
-                write_wav(self._result_path(f"{task_id}.wav"), out_sr, output)
-                del output
-                await voice_task.report_progress(task_id=runner.task_id, runner_stat='preparation_runner',
-                                                 state='saved',
-                                                 finished=True)
+            await voice_task.dispatch(runner=runner)
+
+            await voice_task.report_progress(task_id=runner.task_id, runner_stat='preparation_runner',
+                                             state='end',
+                                             finished=True)
         except Exception as e:
 
             logger.error(f'{e.__class__.__name__}: {e}',
                          exc_info=e)
             await voice_task.report_progress(task_id=task_id, runner_stat='preparation_runner',
                                              state='error', finished=True)
-
-    def _result_path(self, path: str) -> str:
-        return get_tmp_path(f'result/{path}')
 
 
 class WebSpeaker(Speaker):
@@ -109,7 +101,7 @@ class WebSpeaker(Speaker):
         """
         logger.info('Waiting for WebSpeaker tasks')
 
-        async def sync_state(task_id: str, runner_stat: str, state: str, finished: bool):
+        async def sync_state(task_id: str, runner_stat: str, state: str, finished: bool, result: dict):
             # wait for translation to be saved first (bad solution?)
             finished = finished and not state == 'finished'
             while True:
@@ -120,6 +112,7 @@ class WebSpeaker(Speaker):
                         'nonce': self.nonce,
                         'state': state,
                         'finished': finished,
+                        'result': result
                     }
                     # 处理每个runner的调度
                     for _key, _remote_info in self.remote_infos.items():
@@ -160,6 +153,7 @@ class WebSpeaker(Speaker):
 
             # 处理每个runner的调度,如果有任何一个返回了任务，则执行调度
             for key, remote_info in self.remote_infos.items():
+                # TODO 此处需要分布式调度，需要考虑重复调度的问题
                 if self._task_results.get(key) is None or self._task_results.get(key).get("task_id") is None:
                     wait_flag = True
                 else:
@@ -170,11 +164,12 @@ class WebSpeaker(Speaker):
                 await asyncio.sleep(1)
                 continue
 
-            if self.verbose:
-                # Write log file
-                log_file = self._result_path('log.txt')
-                add_file_logger(log_file)
+            # if self.verbose:
+            #     # Write log file
+            #     log_file = self._result_path('log.txt')
+            #     add_file_logger(log_file)
 
+            # TODO 调度任务应当从队列中获取，而不是从runner_bootstrap_web中获取
             # 处理每个runner的调度
             for key, remote_info in self.remote_infos.items():
                 logger.info(f'Processing task {self._task_results.get(key).get("task_id")}')
@@ -182,10 +177,10 @@ class WebSpeaker(Speaker):
                 await self.preparation_runner(task_id=self._task_results.get(key).get("task_id"),
                                               payload=PayLoad.parse_obj(self._task_results.get(key).get("data")))
 
-            if self.verbose:
-                # Write log file
-                log_file = self._result_path('log.txt')
-                remove_file_logger(log_file)
+            # if self.verbose:
+            #     # Write log file
+            #     log_file = self._result_path('log.txt')
+            #     remove_file_logger(log_file)
 
     def _get_task(self):
         try:
