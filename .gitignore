@@ -25,3 +25,13 @@ bfg.jar
 bark/assets/prompts/*
 rvc/model/hubert_base.pt
 rvc/model/rmvpe.pt
+out
+*/**/*.pth
+*/**/*.index
+*/**/*.th
+*/**/*.so
+*/**/*.wav
+*/**/*.c
+/src/components/speakers/my_example_component/__init__.py
+/src/components/speakers/my_example_component/core.py
+/src/components/speakers/vits/monotonic_align/build/temp.linux-x86_64-cpython-310/core.o
