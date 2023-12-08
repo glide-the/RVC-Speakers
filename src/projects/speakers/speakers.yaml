@@ -14,6 +14,7 @@ preprocess:
         rvc_config_file: "/media/checkpoint/RVC-Speakers-hub/rvc/rvc.yaml"
     - bark_processor:
         name: "bark_to_voice"
+        history_prompt_path: "/media/checkpoint/RVC-Speakers-hub/bark"
         codec_repository_path: "/media/checkpoint/RVC-Speakers-hub/bark/model/codec"
         tokenizer_path: "/media/checkpoint/RVC-Speakers-hub/bark/model/bert-base-multilingual-cased"
         text_model_path: "/media/checkpoint/RVC-Speakers-hub/bark/model/suno/bark_v0/text_2.pt"

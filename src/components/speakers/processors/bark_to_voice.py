@@ -56,8 +56,9 @@ class BarkProcessorData(ProcessorData):
 @registry.register_processor("bark_to_voice")
 class BarkToVoice(BaseProcessor):
 
-    def __init__(self,codec_repository_path: str, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
+    def __init__(self, history_prompt_path: str, codec_repository_path: str, tokenizer_path: str, text_path: str, coarse_path: str, fine_path: str):
         super().__init__()
+        self._history_prompt_path = history_prompt_path
         self._load_bark_mode(codec_repository_path=codec_repository_path,
                              tokenizer_path=tokenizer_path,
                              text_path=text_path,
@@ -77,7 +78,7 @@ class BarkToVoice(BaseProcessor):
         logger.info(f"sentences:{sentences}")
         for sentence in sentences:
             audio_array = self._generate_audio(text=sentence,
-                                               history_prompt_dir=registry.get_path('bark_library_root'),
+                                               history_prompt_dir=self._history_prompt_path,
                                                history_prompt=data.speaker_history_prompt,
                                                text_temp=data.text_temp,
                                                waveform_temp=data.waveform_temp)
@@ -93,13 +94,16 @@ class BarkToVoice(BaseProcessor):
         if cfg is None:
             raise RuntimeError("from_config cfg is None.")
 
+        history_prompt_path = cfg.get("history_prompt_path", "")
         codec_repository_path = cfg.get("codec_repository_path", "")
         tokenizer_path = cfg.get("tokenizer_path", "")
         text_model_path = cfg.get("text_model_path", "")
         coarse_model_path = cfg.get("coarse_model_path", "")
         fine_model_path = cfg.get("fine_model_path", "")
 
-        return cls(codec_repository_path=os.path.join(registry.get_path("bark_library_root"),
+        return cls(history_prompt_path=os.path.join(registry.get_path("bark_library_root"),
+                                                    history_prompt_path),
+                   codec_repository_path=os.path.join(registry.get_path("bark_library_root"),
                                                      codec_repository_path),
                    tokenizer_path=os.path.join(registry.get_path("bark_library_root"),
                                                tokenizer_path),
