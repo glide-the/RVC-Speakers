@@ -30,10 +30,11 @@ def generate_nonce():
 def start_translator_client_proc(speakers_config_file: str, nonce: str = None):
     cmds = [
         sys.executable,
-        '-m', 'speakers',
+        '-m', 'speakers.start.start',
         '--mode', 'web_runner',
         '--speakers-config-file', speakers_config_file,
         '--nonce', nonce,
+        '--verbose'
     ]
 
     proc = subprocess.Popen(cmds, cwd=f"{registry.get_path('library_root')}/../")
@@ -58,7 +59,6 @@ async def dispatch(speakers_config_file: str, nonce: str = None):
 
     runner = await start_async_app(speakers_config_file=speakers_config_file, nonce=nonce)
     # Create client process
-    print()
     client_process = start_translator_client_proc(speakers_config_file, nonce=nonce)
 
     try:
@@ -74,7 +74,7 @@ async def dispatch(speakers_config_file: str, nonce: str = None):
                     state = runner.task_states[task_id]
                     state['info'] = 'error'
                     state['finished'] = True
-                client_process = start_translator_client_proc(speakers_config_file=speakers_config_file)
+                client_process = start_translator_client_proc(speakers_config_file=speakers_config_file, nonce=nonce)
 
             # Filter queued and finished tasks
             now = time.time()

@@ -9,6 +9,7 @@ from speakers.start import set_main_logger, Speaker, WebSpeaker
 from speakers.processors.bark_to_voice import set_bark_to_voice_logger
 from speakers.processors.rvc_speakers_processor import set_rvc_speakers_logger
 from speakers.processors.vits_to_voice import set_vits_to_voice_logger
+from speakers.processors.edge_to_voice import set_edge_to_voice_logger
 from speakers.server.servlet.runner import set_server_runner_logger
 from speakers.server.model.flow_data import PayLoad
 from speakers.server.server_init import dispatch as dispatch_web
@@ -64,6 +65,7 @@ def main():
         set_vits_to_voice_logger(logger)
         set_bark_to_voice_logger(logger)
         set_server_runner_logger(logger)
+        set_edge_to_voice_logger(logger)
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

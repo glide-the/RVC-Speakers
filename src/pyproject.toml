@@ -9,7 +9,6 @@ packages = [
     {include = "speakers/server",from = "bases"},
     {include = "speakers/start",from = "bases"},
     {include = "speakers/processors",from = "components"},
-    {include = "speakers/my_example_component",from = "components"},
     {include = "speakers/bark",from = "components"},
     {include = "speakers/rvc",from = "components"},
     {include = "speakers/common",from = "components"},

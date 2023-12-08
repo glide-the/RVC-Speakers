@@ -5,7 +5,22 @@ description = ""
 authors = ['glide-the <2533736852@qq.com>']
 license = ""
 
-packages = []
+packages = [
+    {include = "speakers/server",from = "../../bases"},
+    {include = "speakers/start",from = "../../bases"},
+    {include = "speakers/processors",from = "../../components"},
+    {include = "speakers/bark",from = "../../components"},
+    {include = "speakers/rvc",from = "../../components"},
+    {include = "speakers/common",from = "../../components"},
+    {include = "speakers/load",from = "../../components"},
+    {include = "speakers/tasks",from = "../../components"},
+    {include = "speakers/TransNetV2",from = "../../components"},
+    {include = "speakers/vits",from = "../../components"},
+]
+include = [
+    {path = "speakers.yaml"},
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
