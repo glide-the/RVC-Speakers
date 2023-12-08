@@ -40,6 +40,6 @@ RUN cd /code/src && \
 RUN cd /code/src/projects/speakers/dist && \
     pip install speakers-0.1.0-py3-none-any.whl
 
-CMD ["python", "-m", "speakers.start.start", "--speakers-config-file","/RVC-Speakers-hub/speakers.yaml", "--verbose",  "--mode", "web"]
+CMD ["python", "-m", "speakers.start.start", "--speakers-config-file","/media/checkpoint/RVC-Speakers-hub/speakers.yaml", "--verbose",  "--mode", "web"]
 
 EXPOSE 10001

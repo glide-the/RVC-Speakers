@@ -6,7 +6,7 @@ services:
     image: rvc_speakers:latest
     container_name: rvc_speakers
     volumes:
-      - /media/checkpoint/RVC-Speakers-hub:/RVC-Speakers-hub
+      - /media/checkpoint/RVC-Speakers-hub:/media/checkpoint/RVC-Speakers-hub
     ulimits:
       nofile:
         soft: 1000000
