@@ -1,0 +1,11 @@
+{
+    "model": "bobsponge.pth",
+    "feat_index": "added_IVF3536_Flat_nprobe_1_v2.index",
+    "speaker_id": 0,
+
+    "name": "Bob Sponge",
+    "author": "Lüh Minion",
+    "source": "ALL",
+    "note": "This was trained on over 40 minutes of audio, using songs sang by SpongeBob as well as video game voice clips.  This was trained using the crepe method, 64 HOP, on the v2 model architecture ",
+    "icon": "Sponge.png"
+}

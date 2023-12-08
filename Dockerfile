@@ -31,7 +31,7 @@ RUN pip install --upgrade cython numpy && \
     cd /code/src/components/speakers/vits/monotonic_align && \
     mkdir -p /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/ && \
     python setup.py build_ext --inplace && \
-    mv /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/* /code/src/components/speakers/vits/monotonic_align/ \
+    mv /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/* /code/src/components/speakers/vits/monotonic_align/
 
 # 打包服务发布包
 RUN cd /code/src && \

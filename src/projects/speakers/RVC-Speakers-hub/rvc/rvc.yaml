@@ -1,0 +1,15 @@
+ # Copyright (c) 2022, salesforce.com, inc.
+ # All rights reserved.
+ # SPDX-License-Identifier: BSD-3-Clause
+ # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+
+
+rmvpe_path: "/media/checkpoint/RVC-Speakers-hub/rvc/model/rmvpe.pt"
+
+models:
+    - yiqing:
+        model_name: "yiqing"
+        path: "/media/checkpoint/RVC-Speakers-hub/rvc/model/yiqing"
+    - bob:
+        model_name: "bob"
+        path: "/media/checkpoint/RVC-Speakers-hub/rvc/model/bob" 
