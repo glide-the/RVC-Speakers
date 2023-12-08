@@ -24,21 +24,26 @@ RUN cd /code/src && \
 
 RUN cd /code/src && \
     poetry self add poetry-polylith-plugin
+# 虚拟环境依赖
+RUN cd /code/src && \
+    poetry install
 
-
-# vits依赖项
-RUN pip install --upgrade cython numpy && \
-    cd /code/src/components/speakers/vits/monotonic_align && \
-    mkdir -p /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/ && \
-    python setup.py build_ext --inplace && \
-    mv /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/* /code/src/components/speakers/vits/monotonic_align/ \
+# 全局环境依赖
+RUN pip install --upgrade cython numpy
 
 # 打包服务发布包
 RUN cd /code/src && \
     poetry build-project --directory projects/speakers
 
-RUN cd /code/src/projects/speakers/dist && \
-    pip install speakers-0.1.0-py3-none-any.whl
+
+# vits依赖项
+RUN cd /code/src/components/speakers/vits/monotonic_align && \
+    mkdir -p /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/ && \
+    python setup.py build_ext --inplace && \
+    mv /code/src/components/speakers/vits/monotonic_align/vits/monotonic_align/* /code/src/components/speakers/vits/monotonic_align/
+
+#RUN cd /code/src/projects/speakers/dist && \
+#    pip install speakers-0.1.0-py3-none-any.whl
 
 CMD ["python", "-m", "speakers.start.start", "--speakers-config-file","/RVC-Speakers-hub/speakers.yaml", "--verbose",  "--mode", "web"]
 

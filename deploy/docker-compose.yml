@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  rvc_speakers:
+    build: ../
+    image: rvc_speakers:latest
+    container_name: rvc_speakers
+    volumes:
+      - /media/checkpoint/RVC-Speakers-hub:/RVC-Speakers-hub
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+      nproc: 65535
+    privileged: true
+    ports:
+      - 10001:10001
